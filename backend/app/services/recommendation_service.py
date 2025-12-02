@@ -1,4 +1,6 @@
+import logging
 import math
+import os
 from typing import Any, Dict, List, Optional, Set
 from uuid import UUID
 
@@ -7,6 +9,9 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 from app.config.database import database
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 
 class RecommendationService:
@@ -19,6 +24,12 @@ class RecommendationService:
         self.books: List[Dict[str, Any]] = []
         self.user_ids: List[str] = []
         self.book_ids: List[str] = []
+        
+        # ML hyperparameters - can be overridden via environment variables
+        self.learning_rate = float(os.getenv("ML_LEARNING_RATE", "0.01"))
+        self.regularization = float(os.getenv("ML_REGULARIZATION", "0.02"))
+        self.iterations = int(os.getenv("ML_ITERATIONS", "100"))
+        self.random_seed = int(os.getenv("ML_RANDOM_SEED", "42")) if os.getenv("ML_RANDOM_SEED") else None
 
     async def initialize_tfidf(self) -> None:
         """Initialize TF-IDF vectors for all books."""
@@ -35,7 +46,7 @@ class RecommendationService:
             self.books = [dict(r) for r in result]
             
             if not self.books:
-                print("No books found for TF-IDF initialization")
+                logger.warning("No books found for TF-IDF initialization")
                 return
 
             # Prepare documents for TF-IDF
@@ -61,9 +72,9 @@ class RecommendationService:
             self.tfidf_matrix = self.tfidf_vectorizer.fit_transform(documents)
             self.initialized = True
             
-            print(f"TF-IDF initialized with {len(self.books)} books")
+            logger.info(f"TF-IDF initialized with {len(self.books)} books")
         except Exception as e:
-            print(f"Error initializing TF-IDF: {e}")
+            logger.error(f"Error initializing TF-IDF: {e}")
 
     async def get_content_based_recommendations(
         self, 
@@ -258,12 +269,14 @@ class RecommendationService:
                     matrix[u_idx, b_idx] = rating
 
         # Simple gradient descent for matrix factorization
-        learning_rate = 0.01
-        regularization = 0.02
-        iterations = 100
+        # Use configurable hyperparameters from instance
+        learning_rate = self.learning_rate
+        regularization = self.regularization
+        iterations = self.iterations
 
         # Initialize factor matrices with small random values
-        np.random.seed(42)
+        if self.random_seed is not None:
+            np.random.seed(self.random_seed)
         user_factors = np.random.rand(num_users, factors) * 0.1
         book_factors = np.random.rand(num_books, factors) * 0.1
 
@@ -339,7 +352,7 @@ class RecommendationService:
                 recommendations[bid]["score"] += (rec["predictedRating"] / 5) * weights["svd"]
 
         except Exception as e:
-            print(f"Error in hybrid recommendations: {e}")
+            logger.error(f"Error in hybrid recommendations: {e}")
 
         # Sort by combined score
         sorted_recs = sorted(

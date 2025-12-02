@@ -2,6 +2,8 @@ import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
 import sys
 
+from httpx import AsyncClient, ASGITransport
+
 # Create mock for firebase_admin before any imports
 firebase_mock = MagicMock()
 firebase_mock.apps = []
@@ -67,8 +69,6 @@ def app_with_mock():
 @pytest.mark.asyncio
 async def test_health_check(app_with_mock):
     """Test health check endpoint."""
-    from httpx import AsyncClient, ASGITransport
-    
     transport = ASGITransport(app=app_with_mock)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.get("/health")
@@ -81,8 +81,6 @@ async def test_health_check(app_with_mock):
 @pytest.mark.asyncio
 async def test_unknown_route_returns_404(app_with_mock):
     """Test that unknown routes return 404."""
-    from httpx import AsyncClient, ASGITransport
-    
     transport = ASGITransport(app=app_with_mock)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.get("/api/unknown")
@@ -94,8 +92,6 @@ async def test_unknown_route_returns_404(app_with_mock):
 @pytest.mark.asyncio
 async def test_get_popular_books(app_with_mock):
     """Test getting popular books."""
-    from httpx import AsyncClient, ASGITransport
-    
     mock_db.fetch_all.return_value = [
         {"id": "550e8400-e29b-41d4-a716-446655440000", "title": "Test Manga", "average_rating": 4.5}
     ]
@@ -111,8 +107,6 @@ async def test_get_popular_books(app_with_mock):
 @pytest.mark.asyncio
 async def test_search_books(app_with_mock):
     """Test searching books."""
-    from httpx import AsyncClient, ASGITransport
-    
     mock_db.fetch_all.return_value = []
     mock_db.fetch_one.return_value = {"count": 0}
     
@@ -128,8 +122,6 @@ async def test_search_books(app_with_mock):
 @pytest.mark.asyncio
 async def test_autocomplete_with_query(app_with_mock):
     """Test autocomplete with a valid query."""
-    from httpx import AsyncClient, ASGITransport
-    
     mock_db.fetch_all.return_value = [
         {"id": "550e8400-e29b-41d4-a716-446655440000", "title": "Test", "title_th": "ทดสอบ", 
          "cover_image_url": None, "type": "manga"}
@@ -146,8 +138,6 @@ async def test_autocomplete_with_query(app_with_mock):
 @pytest.mark.asyncio
 async def test_autocomplete_short_query_returns_empty(app_with_mock):
     """Test that short autocomplete queries return empty list."""
-    from httpx import AsyncClient, ASGITransport
-    
     transport = ASGITransport(app=app_with_mock)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.get("/api/books/autocomplete?query=t")
@@ -159,8 +149,6 @@ async def test_autocomplete_short_query_returns_empty(app_with_mock):
 @pytest.mark.asyncio
 async def test_get_tags(app_with_mock):
     """Test getting all tags."""
-    from httpx import AsyncClient, ASGITransport
-    
     mock_db.fetch_all.return_value = [
         {"id": "550e8400-e29b-41d4-a716-446655440001", "name": "Action", "name_th": "แอคชั่น", "category": "genre"},
         {"id": "550e8400-e29b-41d4-a716-446655440002", "name": "Romance", "name_th": "โรแมนซ์", "category": "genre"},
@@ -177,8 +165,6 @@ async def test_get_tags(app_with_mock):
 @pytest.mark.asyncio
 async def test_get_popular_tags(app_with_mock):
     """Test getting popular tags."""
-    from httpx import AsyncClient, ASGITransport
-    
     mock_db.fetch_all.return_value = [
         {"id": "550e8400-e29b-41d4-a716-446655440001", "name": "Action", "name_th": None, 
          "category": "genre", "book_count": 100}
@@ -195,8 +181,6 @@ async def test_get_popular_tags(app_with_mock):
 @pytest.mark.asyncio
 async def test_get_authors(app_with_mock):
     """Test getting all authors."""
-    from httpx import AsyncClient, ASGITransport
-    
     mock_db.fetch_all.return_value = [
         {"id": "550e8400-e29b-41d4-a716-446655440001", "name": "Test Author", "name_th": None, 
          "biography": None, "biography_th": None, "avatar_url": None, "book_count": 5, 
@@ -215,8 +199,6 @@ async def test_get_authors(app_with_mock):
 @pytest.mark.asyncio
 async def test_search_authors(app_with_mock):
     """Test searching authors."""
-    from httpx import AsyncClient, ASGITransport
-    
     mock_db.fetch_all.return_value = [
         {"id": "550e8400-e29b-41d4-a716-446655440001", "name": "Test", "name_th": None, 
          "biography": None, "biography_th": None, "avatar_url": None, "book_count": 0, 
@@ -234,8 +216,6 @@ async def test_search_authors(app_with_mock):
 @pytest.mark.asyncio
 async def test_get_publishers(app_with_mock):
     """Test getting all publishers."""
-    from httpx import AsyncClient, ASGITransport
-    
     mock_db.fetch_all.return_value = [
         {"id": "550e8400-e29b-41d4-a716-446655440001", "name": "Test Publisher", "name_th": None, 
          "description": None, "description_th": None, "website_url": None, "logo_url": None, 
@@ -254,8 +234,6 @@ async def test_get_publishers(app_with_mock):
 @pytest.mark.asyncio
 async def test_get_popular_recommendations(app_with_mock):
     """Test getting popular books for cold start."""
-    from httpx import AsyncClient, ASGITransport
-    
     mock_db.fetch_all.return_value = [
         {"id": "550e8400-e29b-41d4-a716-446655440001", "title": "Popular Manga", "average_rating": 4.8}
     ]
@@ -271,8 +249,6 @@ async def test_get_popular_recommendations(app_with_mock):
 @pytest.mark.asyncio
 async def test_get_popular_searches(app_with_mock):
     """Test getting popular searches."""
-    from httpx import AsyncClient, ASGITransport
-    
     mock_db.fetch_all.return_value = [
         {"search_query": "one piece", "search_count": 100}
     ]
