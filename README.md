@@ -1,153 +1,153 @@
-# Manga/Novel Recommendation System
+# ระบบแนะนำมังงะ/นิยาย
 
-A full-stack web application for discovering, reviewing, and getting personalized recommendations for manga, novels, light novels, manhwa, and manhua.
+เว็บแอปพลิเคชันแบบ Full-stack สำหรับค้นหา รีวิว และรับคำแนะนำมังงะ นิยาย ไลท์โนเวล มันฮวา และมันฮัว แบบเฉพาะบุคคล
 
-## Features
+## ฟีเจอร์
 
-### User Features
-- 🔐 **Authentication** - Login with Google via Firebase
-- 🔍 **Search** - Full-text search with filters (type, status, tags, rating, year)
-- 📖 **Browse** - View book details, ratings, and reviews
-- 💾 **Favorites** - Save books to custom lists (Favorites, Reading, Completed, Plan to Read, Dropped)
-- ✍️ **Reviews** - Write and rate books, mark reviews as helpful
-- 🤖 **Recommendations** - Get personalized suggestions based on your preferences
+### ฟีเจอร์สำหรับผู้ใช้
+- 🔐 **การยืนยันตัวตน** - เข้าสู่ระบบด้วย Google ผ่าน Firebase
+- 🔍 **การค้นหา** - ค้นหาแบบ Full-text พร้อมตัวกรอง (ประเภท, สถานะ, แท็ก, คะแนน, ปี)
+- 📖 **เรียกดู** - ดูรายละเอียดหนังสือ คะแนน และรีวิว
+- 💾 **รายการโปรด** - บันทึกหนังสือในรายการที่กำหนดเอง (รายการโปรด, กำลังอ่าน, อ่านจบแล้ว, วางแผนจะอ่าน, เลิกอ่าน)
+- ✍️ **รีวิว** - เขียนรีวิวและให้คะแนนหนังสือ ทำเครื่องหมายรีวิวที่มีประโยชน์
+- 🤖 **คำแนะนำ** - รับคำแนะนำเฉพาะบุคคลตามความชอบของคุณ
 
-### Admin Features
-- 📚 Manage Books (CRUD operations)
-- 👤 Manage Authors
-- 🏢 Manage Publishers
-- ✅ Moderate Reviews (approve/reject)
+### ฟีเจอร์สำหรับผู้ดูแลระบบ
+- 📚 จัดการหนังสือ (การดำเนินการ CRUD)
+- 👤 จัดการนักเขียน
+- 🏢 จัดการสำนักพิมพ์
+- ✅ ตรวจสอบรีวิว (อนุมัติ/ปฏิเสธ)
 
-### Technical Features
-- 🌍 **Thai Language Support** - Full i18n support for Thai and English
-- 📱 **Responsive Design** - Works on desktop, tablet, and mobile
-- ⚡ **AI Recommendations** using:
-  - TF-IDF + Cosine Similarity for content-based filtering
-  - KNN + SVD for collaborative filtering
-  - Hybrid approach combining both methods
+### ฟีเจอร์ทางเทคนิค
+- 🌍 **รองรับภาษาไทย** - รองรับ i18n สำหรับภาษาไทยและภาษาอังกฤษ
+- 📱 **ออกแบบ Responsive** - ใช้งานได้บนเดสก์ท็อป แท็บเล็ต และมือถือ
+- ⚡ **คำแนะนำจาก AI** โดยใช้:
+  - TF-IDF + Cosine Similarity สำหรับการกรองตามเนื้อหา
+  - KNN + SVD สำหรับการกรองแบบ Collaborative
+  - วิธีผสมผสาน (Hybrid) ที่รวมทั้งสองวิธี
 
-## Tech Stack
+## เทคโนโลยีที่ใช้
 
 ### Backend
-- **Runtime**: Node.js with Express
-- **Database**: PostgreSQL
-- **Authentication**: Firebase Admin SDK + JWT
-- **AI/ML**: Natural.js for NLP (TF-IDF)
+- **Runtime**: Node.js กับ Express
+- **ฐานข้อมูล**: PostgreSQL
+- **การยืนยันตัวตน**: Firebase Admin SDK + JWT
+- **AI/ML**: Natural.js สำหรับ NLP (TF-IDF)
 
 ### Frontend
 - **Framework**: React 18
 - **Routing**: React Router v6
-- **Internationalization**: i18next
-- **Authentication**: Firebase Auth
+- **การรองรับหลายภาษา**: i18next
+- **การยืนยันตัวตน**: Firebase Auth
 - **HTTP Client**: Axios
 
-## Getting Started
+## เริ่มต้นใช้งาน
 
-### Prerequisites
+### สิ่งที่ต้องมี
 - Node.js 18+
 - PostgreSQL 13+
-- Firebase Project
+- โปรเจกต์ Firebase
 
-### Backend Setup
+### การตั้งค่า Backend
 
 ```bash
 cd backend
 
-# Install dependencies
+# ติดตั้ง dependencies
 npm install
 
-# Copy environment variables
+# คัดลอกไฟล์ตัวแปรสภาพแวดล้อม
 cp .env.example .env
-# Edit .env with your configuration
+# แก้ไข .env ตามการตั้งค่าของคุณ
 
-# Setup database (run schema.sql in PostgreSQL)
+# ตั้งค่าฐานข้อมูล (รัน schema.sql ใน PostgreSQL)
 psql -d your_database -f src/config/schema.sql
 
-# Start development server
+# เริ่มเซิร์ฟเวอร์สำหรับพัฒนา
 npm run dev
 ```
 
-### Frontend Setup
+### การตั้งค่า Frontend
 
 ```bash
 cd frontend
 
-# Install dependencies
+# ติดตั้ง dependencies
 npm install
 
-# Copy environment variables
+# คัดลอกไฟล์ตัวแปรสภาพแวดล้อม
 cp .env.example .env
-# Edit .env with your Firebase config
+# แก้ไข .env ด้วยการตั้งค่า Firebase ของคุณ
 
-# Start development server
+# เริ่มเซิร์ฟเวอร์สำหรับพัฒนา
 npm start
 ```
 
 ## API Endpoints
 
-### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login/firebase` - Login with Firebase token
-- `GET /api/auth/profile` - Get current user profile
-- `PUT /api/auth/profile` - Update profile
+### การยืนยันตัวตน
+- `POST /api/auth/register` - ลงทะเบียนผู้ใช้ใหม่
+- `POST /api/auth/login/firebase` - เข้าสู่ระบบด้วย Firebase token
+- `GET /api/auth/profile` - ดูโปรไฟล์ผู้ใช้ปัจจุบัน
+- `PUT /api/auth/profile` - อัปเดตโปรไฟล์
 
-### Books
-- `GET /api/books` - List books with pagination
-- `GET /api/books/search` - Search books with filters
-- `GET /api/books/autocomplete` - Autocomplete search
-- `GET /api/books/:id` - Get book details
-- `GET /api/books/:id/recommendations` - Get similar books
-- `POST /api/books` - Create book (admin)
-- `PUT /api/books/:id` - Update book (admin)
-- `DELETE /api/books/:id` - Delete book (admin)
+### หนังสือ
+- `GET /api/books` - รายการหนังสือพร้อมการแบ่งหน้า
+- `GET /api/books/search` - ค้นหาหนังสือพร้อมตัวกรอง
+- `GET /api/books/autocomplete` - ค้นหาแบบเติมอัตโนมัติ
+- `GET /api/books/:id` - ดูรายละเอียดหนังสือ
+- `GET /api/books/:id/recommendations` - ดูหนังสือที่คล้ายกัน
+- `POST /api/books` - สร้างหนังสือ (ผู้ดูแลระบบ)
+- `PUT /api/books/:id` - อัปเดตหนังสือ (ผู้ดูแลระบบ)
+- `DELETE /api/books/:id` - ลบหนังสือ (ผู้ดูแลระบบ)
 
-### Reviews
-- `GET /api/reviews/book/:bookId` - Get reviews for a book
-- `POST /api/reviews` - Create review
-- `PUT /api/reviews/:id` - Update review
-- `DELETE /api/reviews/:id` - Delete review
+### รีวิว
+- `GET /api/reviews/book/:bookId` - ดูรีวิวของหนังสือ
+- `POST /api/reviews` - สร้างรีวิว
+- `PUT /api/reviews/:id` - อัปเดตรีวิว
+- `DELETE /api/reviews/:id` - ลบรีวิว
 
-### Favorites
-- `GET /api/favorites` - Get user's favorites
-- `POST /api/favorites` - Add to favorites
-- `DELETE /api/favorites/:bookId` - Remove from favorites
+### รายการโปรด
+- `GET /api/favorites` - ดูรายการโปรดของผู้ใช้
+- `POST /api/favorites` - เพิ่มในรายการโปรด
+- `DELETE /api/favorites/:bookId` - ลบออกจากรายการโปรด
 
-### Recommendations
-- `GET /api/recommendations/personalized` - Get personalized recommendations
-- `GET /api/recommendations/popular` - Get popular books
-- `POST /api/recommendations/interaction` - Record user interaction
+### คำแนะนำ
+- `GET /api/recommendations/personalized` - รับคำแนะนำเฉพาะบุคคล
+- `GET /api/recommendations/popular` - ดูหนังสือยอดนิยม
+- `POST /api/recommendations/interaction` - บันทึกการโต้ตอบของผู้ใช้
 
-## Database Schema
+## โครงสร้างฐานข้อมูล
 
-The system uses the following main tables:
-- **users** - User accounts
-- **books** - Manga/novels
-- **authors** - Book authors
-- **publishers** - Publishers
-- **tags** - Genres and themes
-- **reviews** - User reviews and ratings
-- **favorites** - User's saved books
-- **search_history** - Search history for recommendations
-- **user_interactions** - User behavior tracking
+ระบบใช้ตารางหลักดังต่อไปนี้:
+- **users** - บัญชีผู้ใช้
+- **books** - มังงะ/นิยาย
+- **authors** - นักเขียน
+- **publishers** - สำนักพิมพ์
+- **tags** - หมวดหมู่และธีม
+- **reviews** - รีวิวและคะแนนจากผู้ใช้
+- **favorites** - หนังสือที่บันทึกไว้ของผู้ใช้
+- **search_history** - ประวัติการค้นหาสำหรับคำแนะนำ
+- **user_interactions** - การติดตามพฤติกรรมผู้ใช้
 
-## AI Recommendation Algorithm
+## อัลกอริทึมแนะนำจาก AI
 
-### Content-Based Filtering (TF-IDF + Cosine Similarity)
-- Analyzes book descriptions, titles, and tags
-- Finds similar books based on text content
-- Works well for new users with limited history
+### การกรองตามเนื้อหา (TF-IDF + Cosine Similarity)
+- วิเคราะห์คำอธิบาย ชื่อเรื่อง และแท็กของหนังสือ
+- ค้นหาหนังสือที่คล้ายกันโดยอิงจากเนื้อหาข้อความ
+- ทำงานได้ดีสำหรับผู้ใช้ใหม่ที่มีประวัติจำกัด
 
-### Collaborative Filtering (KNN + SVD)
-- **KNN**: Finds users with similar preferences
-- **SVD**: Matrix factorization for latent features
-- Predicts ratings based on similar users' behavior
+### การกรองแบบ Collaborative (KNN + SVD)
+- **KNN**: ค้นหาผู้ใช้ที่มีความชอบคล้ายกัน
+- **SVD**: Matrix factorization สำหรับ latent features
+- ทำนายคะแนนโดยอิงจากพฤติกรรมของผู้ใช้ที่คล้ายกัน
 
-### Hybrid Approach
-Combines both methods with configurable weights:
-- Content-based: 30%
+### วิธีผสมผสาน (Hybrid)
+รวมทั้งสองวิธีด้วยน้ำหนักที่ปรับได้:
+- ตามเนื้อหา: 30%
 - KNN: 40%
 - SVD: 30%
 
-## License
+## สัญญาอนุญาต
 
 ISC
