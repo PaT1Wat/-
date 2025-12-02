@@ -1,1 +1,0 @@
-# Manga/Novel Recommendation API
