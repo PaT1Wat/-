@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class FavoriteBase(BaseModel):
@@ -23,6 +23,8 @@ class FavoriteUpdateList(BaseModel):
 
 
 class FavoriteResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: UUID
     user_id: UUID
     book_id: UUID
@@ -37,9 +39,6 @@ class FavoriteResponse(BaseModel):
     author_name: Optional[str] = None
     author_name_th: Optional[str] = None
     created_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
 
 
 class FavoriteListResponse(BaseModel):

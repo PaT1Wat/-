@@ -1,34 +1,75 @@
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
-from httpx import AsyncClient, ASGITransport
+import sys
 
-# Mock Firebase before importing app
+# Create mock for firebase_admin before any imports
 firebase_mock = MagicMock()
 firebase_mock.apps = []
 firebase_mock.initialize_app = MagicMock()
-firebase_mock.credential.Certificate = MagicMock()
-firebase_mock.auth.return_value.verify_id_token = MagicMock(side_effect=Exception("Mock error"))
+firebase_mock.credential = MagicMock()
+firebase_mock.credential.Certificate = MagicMock(return_value=MagicMock())
+firebase_mock.auth = MagicMock()
+firebase_mock.auth.verify_id_token = MagicMock(side_effect=Exception("Mock error"))
+firebase_mock.get_app = MagicMock(return_value=MagicMock())
+sys.modules['firebase_admin'] = firebase_mock
+sys.modules['firebase_admin.auth'] = firebase_mock.auth
+sys.modules['firebase_admin.credentials'] = firebase_mock.credential
 
-with patch.dict('sys.modules', {'firebase_admin': firebase_mock}):
-    from main import app
+
+# Create mock database
+class MockDatabase:
+    """Mock database for testing."""
+    
+    def __init__(self):
+        self._connected = False
+        self.fetch_one = AsyncMock(return_value=None)
+        self.fetch_all = AsyncMock(return_value=[])
+        self.execute = AsyncMock()
+    
+    async def connect(self):
+        self._connected = True
+    
+    async def disconnect(self):
+        self._connected = False
+
+
+mock_db = MockDatabase()
+
+
+@pytest.fixture(autouse=True)
+def reset_mock_db():
+    """Reset mock database before each test."""
+    mock_db.fetch_one = AsyncMock(return_value=None)
+    mock_db.fetch_all = AsyncMock(return_value=[])
+    mock_db.execute = AsyncMock()
+    yield
 
 
 @pytest.fixture
-def mock_database():
-    """Mock database for testing."""
-    with patch('app.config.database.database') as mock_db:
-        mock_db.fetch_one = AsyncMock(return_value=None)
-        mock_db.fetch_all = AsyncMock(return_value=[])
-        mock_db.execute = AsyncMock()
-        mock_db.connect = AsyncMock()
-        mock_db.disconnect = AsyncMock()
-        yield mock_db
+def app_with_mock():
+    """Create app with mocked database."""
+    # Patch database in all model modules
+    with patch('app.models.user.database', mock_db), \
+         patch('app.models.book.database', mock_db), \
+         patch('app.models.author.database', mock_db), \
+         patch('app.models.publisher.database', mock_db), \
+         patch('app.models.review.database', mock_db), \
+         patch('app.models.favorite.database', mock_db), \
+         patch('app.models.tag.database', mock_db), \
+         patch('app.models.search_history.database', mock_db), \
+         patch('app.models.user_interaction.database', mock_db), \
+         patch('app.services.recommendation_service.database', mock_db), \
+         patch('app.config.database.database', mock_db):
+        from main import app
+        yield app
 
 
 @pytest.mark.asyncio
-async def test_health_check(mock_database):
+async def test_health_check(app_with_mock):
     """Test health check endpoint."""
-    transport = ASGITransport(app=app)
+    from httpx import AsyncClient, ASGITransport
+    
+    transport = ASGITransport(app=app_with_mock)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.get("/health")
     
@@ -38,9 +79,11 @@ async def test_health_check(mock_database):
 
 
 @pytest.mark.asyncio
-async def test_unknown_route_returns_404(mock_database):
+async def test_unknown_route_returns_404(app_with_mock):
     """Test that unknown routes return 404."""
-    transport = ASGITransport(app=app)
+    from httpx import AsyncClient, ASGITransport
+    
+    transport = ASGITransport(app=app_with_mock)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.get("/api/unknown")
     
@@ -49,13 +92,15 @@ async def test_unknown_route_returns_404(mock_database):
 
 
 @pytest.mark.asyncio
-async def test_get_popular_books(mock_database):
+async def test_get_popular_books(app_with_mock):
     """Test getting popular books."""
-    mock_database.fetch_all.return_value = [
-        {"id": "test-id-1", "title": "Test Manga", "average_rating": 4.5}
+    from httpx import AsyncClient, ASGITransport
+    
+    mock_db.fetch_all.return_value = [
+        {"id": "550e8400-e29b-41d4-a716-446655440000", "title": "Test Manga", "average_rating": 4.5}
     ]
     
-    transport = ASGITransport(app=app)
+    transport = ASGITransport(app=app_with_mock)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.get("/api/books/popular")
     
@@ -64,12 +109,14 @@ async def test_get_popular_books(mock_database):
 
 
 @pytest.mark.asyncio
-async def test_search_books(mock_database):
+async def test_search_books(app_with_mock):
     """Test searching books."""
-    mock_database.fetch_all.return_value = []
-    mock_database.fetch_one.return_value = {"count": 0}
+    from httpx import AsyncClient, ASGITransport
     
-    transport = ASGITransport(app=app)
+    mock_db.fetch_all.return_value = []
+    mock_db.fetch_one.return_value = {"count": 0}
+    
+    transport = ASGITransport(app=app_with_mock)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.get("/api/books/search?query=test")
     
@@ -79,13 +126,16 @@ async def test_search_books(mock_database):
 
 
 @pytest.mark.asyncio
-async def test_autocomplete_with_query(mock_database):
+async def test_autocomplete_with_query(app_with_mock):
     """Test autocomplete with a valid query."""
-    mock_database.fetch_all.return_value = [
-        {"id": "test-id-1", "title": "Test", "title_th": "ทดสอบ", "cover_image_url": None, "type": "manga"}
+    from httpx import AsyncClient, ASGITransport
+    
+    mock_db.fetch_all.return_value = [
+        {"id": "550e8400-e29b-41d4-a716-446655440000", "title": "Test", "title_th": "ทดสอบ", 
+         "cover_image_url": None, "type": "manga"}
     ]
     
-    transport = ASGITransport(app=app)
+    transport = ASGITransport(app=app_with_mock)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.get("/api/books/autocomplete?query=test")
     
@@ -94,9 +144,11 @@ async def test_autocomplete_with_query(mock_database):
 
 
 @pytest.mark.asyncio
-async def test_autocomplete_short_query_returns_empty(mock_database):
+async def test_autocomplete_short_query_returns_empty(app_with_mock):
     """Test that short autocomplete queries return empty list."""
-    transport = ASGITransport(app=app)
+    from httpx import AsyncClient, ASGITransport
+    
+    transport = ASGITransport(app=app_with_mock)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.get("/api/books/autocomplete?query=t")
     
@@ -105,14 +157,16 @@ async def test_autocomplete_short_query_returns_empty(mock_database):
 
 
 @pytest.mark.asyncio
-async def test_get_tags(mock_database):
+async def test_get_tags(app_with_mock):
     """Test getting all tags."""
-    mock_database.fetch_all.return_value = [
-        {"id": "tag-1", "name": "Action", "name_th": "แอคชั่น", "category": "genre"},
-        {"id": "tag-2", "name": "Romance", "name_th": "โรแมนซ์", "category": "genre"},
+    from httpx import AsyncClient, ASGITransport
+    
+    mock_db.fetch_all.return_value = [
+        {"id": "550e8400-e29b-41d4-a716-446655440001", "name": "Action", "name_th": "แอคชั่น", "category": "genre"},
+        {"id": "550e8400-e29b-41d4-a716-446655440002", "name": "Romance", "name_th": "โรแมนซ์", "category": "genre"},
     ]
     
-    transport = ASGITransport(app=app)
+    transport = ASGITransport(app=app_with_mock)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.get("/api/books/tags")
     
@@ -121,13 +175,16 @@ async def test_get_tags(mock_database):
 
 
 @pytest.mark.asyncio
-async def test_get_popular_tags(mock_database):
+async def test_get_popular_tags(app_with_mock):
     """Test getting popular tags."""
-    mock_database.fetch_all.return_value = [
-        {"id": "tag-1", "name": "Action", "name_th": None, "category": "genre", "book_count": 100}
+    from httpx import AsyncClient, ASGITransport
+    
+    mock_db.fetch_all.return_value = [
+        {"id": "550e8400-e29b-41d4-a716-446655440001", "name": "Action", "name_th": None, 
+         "category": "genre", "book_count": 100}
     ]
     
-    transport = ASGITransport(app=app)
+    transport = ASGITransport(app=app_with_mock)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.get("/api/books/tags/popular")
     
@@ -136,15 +193,18 @@ async def test_get_popular_tags(mock_database):
 
 
 @pytest.mark.asyncio
-async def test_get_authors(mock_database):
+async def test_get_authors(app_with_mock):
     """Test getting all authors."""
-    mock_database.fetch_all.return_value = [
-        {"id": "author-1", "name": "Test Author", "name_th": None, "biography": None, 
-         "biography_th": None, "avatar_url": None, "book_count": 5, "created_at": None, "updated_at": None}
-    ]
-    mock_database.fetch_one.return_value = {"count": 1}
+    from httpx import AsyncClient, ASGITransport
     
-    transport = ASGITransport(app=app)
+    mock_db.fetch_all.return_value = [
+        {"id": "550e8400-e29b-41d4-a716-446655440001", "name": "Test Author", "name_th": None, 
+         "biography": None, "biography_th": None, "avatar_url": None, "book_count": 5, 
+         "created_at": None, "updated_at": None}
+    ]
+    mock_db.fetch_one.return_value = {"count": 1}
+    
+    transport = ASGITransport(app=app_with_mock)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.get("/api/authors")
     
@@ -153,14 +213,17 @@ async def test_get_authors(mock_database):
 
 
 @pytest.mark.asyncio
-async def test_search_authors(mock_database):
+async def test_search_authors(app_with_mock):
     """Test searching authors."""
-    mock_database.fetch_all.return_value = [
-        {"id": "author-1", "name": "Test", "name_th": None, "biography": None, 
-         "biography_th": None, "avatar_url": None, "book_count": 0, "created_at": None, "updated_at": None}
+    from httpx import AsyncClient, ASGITransport
+    
+    mock_db.fetch_all.return_value = [
+        {"id": "550e8400-e29b-41d4-a716-446655440001", "name": "Test", "name_th": None, 
+         "biography": None, "biography_th": None, "avatar_url": None, "book_count": 0, 
+         "created_at": None, "updated_at": None}
     ]
     
-    transport = ASGITransport(app=app)
+    transport = ASGITransport(app=app_with_mock)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.get("/api/authors/search?query=test")
     
@@ -169,16 +232,18 @@ async def test_search_authors(mock_database):
 
 
 @pytest.mark.asyncio
-async def test_get_publishers(mock_database):
+async def test_get_publishers(app_with_mock):
     """Test getting all publishers."""
-    mock_database.fetch_all.return_value = [
-        {"id": "pub-1", "name": "Test Publisher", "name_th": None, "description": None,
-         "description_th": None, "website_url": None, "logo_url": None, "book_count": 10, 
-         "created_at": None, "updated_at": None}
-    ]
-    mock_database.fetch_one.return_value = {"count": 1}
+    from httpx import AsyncClient, ASGITransport
     
-    transport = ASGITransport(app=app)
+    mock_db.fetch_all.return_value = [
+        {"id": "550e8400-e29b-41d4-a716-446655440001", "name": "Test Publisher", "name_th": None, 
+         "description": None, "description_th": None, "website_url": None, "logo_url": None, 
+         "book_count": 10, "created_at": None, "updated_at": None}
+    ]
+    mock_db.fetch_one.return_value = {"count": 1}
+    
+    transport = ASGITransport(app=app_with_mock)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.get("/api/publishers")
     
@@ -187,13 +252,15 @@ async def test_get_publishers(mock_database):
 
 
 @pytest.mark.asyncio
-async def test_get_popular_recommendations(mock_database):
+async def test_get_popular_recommendations(app_with_mock):
     """Test getting popular books for cold start."""
-    mock_database.fetch_all.return_value = [
-        {"id": "book-1", "title": "Popular Manga", "average_rating": 4.8}
+    from httpx import AsyncClient, ASGITransport
+    
+    mock_db.fetch_all.return_value = [
+        {"id": "550e8400-e29b-41d4-a716-446655440001", "title": "Popular Manga", "average_rating": 4.8}
     ]
     
-    transport = ASGITransport(app=app)
+    transport = ASGITransport(app=app_with_mock)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.get("/api/recommendations/popular")
     
@@ -202,13 +269,15 @@ async def test_get_popular_recommendations(mock_database):
 
 
 @pytest.mark.asyncio
-async def test_get_popular_searches(mock_database):
+async def test_get_popular_searches(app_with_mock):
     """Test getting popular searches."""
-    mock_database.fetch_all.return_value = [
+    from httpx import AsyncClient, ASGITransport
+    
+    mock_db.fetch_all.return_value = [
         {"search_query": "one piece", "search_count": 100}
     ]
     
-    transport = ASGITransport(app=app)
+    transport = ASGITransport(app=app_with_mock)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         response = await ac.get("/api/recommendations/searches/popular")
     

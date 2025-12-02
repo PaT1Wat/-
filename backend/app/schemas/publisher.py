@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class PublisherBase(BaseModel):
@@ -28,6 +28,8 @@ class PublisherUpdate(BaseModel):
 
 
 class PublisherResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: UUID
     name: str
     name_th: Optional[str] = None
@@ -38,9 +40,6 @@ class PublisherResponse(BaseModel):
     book_count: Optional[int] = 0
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
 
 
 class PublisherListResponse(BaseModel):

@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class InteractionCreate(BaseModel):
@@ -12,6 +12,8 @@ class InteractionCreate(BaseModel):
 
 
 class RecommendationResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: UUID
     title: str
     title_th: Optional[str] = None
@@ -21,9 +23,6 @@ class RecommendationResponse(BaseModel):
     author_name: Optional[str] = None
     author_name_th: Optional[str] = None
     recommendation_score: Optional[float] = None
-
-    class Config:
-        from_attributes = True
 
 
 class SimilarityScore(BaseModel):
@@ -37,14 +36,13 @@ class PredictedRating(BaseModel):
 
 
 class SearchHistoryItem(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: UUID
     search_query: str
     filters: Optional[Dict[str, Any]] = None
     results_count: Optional[int] = 0
     created_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
 
 
 class PopularSearchItem(BaseModel):

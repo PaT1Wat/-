@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 # Base schemas
@@ -25,6 +25,8 @@ class UserUpdate(BaseModel):
 
 
 class UserResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: UUID
     email: EmailStr
     username: str
@@ -33,9 +35,6 @@ class UserResponse(BaseModel):
     role: str = "user"
     preferred_language: Optional[str] = "th"
     created_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
 
 
 class UserRoleUpdate(BaseModel):

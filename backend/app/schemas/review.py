@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ReviewBase(BaseModel):
@@ -24,6 +24,8 @@ class ReviewUpdate(BaseModel):
 
 
 class ReviewResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: UUID
     user_id: UUID
     book_id: UUID
@@ -41,9 +43,6 @@ class ReviewResponse(BaseModel):
     cover_image_url: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
 
 
 class ReviewListResponse(BaseModel):

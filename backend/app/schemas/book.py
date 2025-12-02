@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any, List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class TagBase(BaseModel):
@@ -16,13 +16,12 @@ class TagCreate(TagBase):
 
 
 class TagResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: UUID
     name: str
     name_th: Optional[str] = None
     category: Optional[str] = None
-
-    class Config:
-        from_attributes = True
 
 
 class TagWithCount(TagResponse):
@@ -67,6 +66,8 @@ class BookUpdate(BaseModel):
 
 
 class BookResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: UUID
     title: str
     title_th: Optional[str] = None
@@ -93,9 +94,6 @@ class BookResponse(BaseModel):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
-
 
 class BookListResponse(BaseModel):
     books: List[BookResponse]
@@ -105,14 +103,13 @@ class BookListResponse(BaseModel):
 
 
 class BookAutocompleteResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: UUID
     title: str
     title_th: Optional[str] = None
     cover_image_url: Optional[str] = None
     type: Optional[str] = None
-
-    class Config:
-        from_attributes = True
 
 
 class SearchParams(BaseModel):

@@ -55,7 +55,8 @@ app.add_exception_handler(Exception, http_exception_handler)
 # Health check endpoint
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "timestamp": __import__("datetime").datetime.utcnow().isoformat()}
+    from datetime import datetime, timezone
+    return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 
 # Include routers
