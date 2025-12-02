@@ -29,10 +29,10 @@ A full-stack web application for discovering, reviewing, and getting personalize
 ## Tech Stack
 
 ### Backend
-- **Runtime**: Node.js with Express
-- **Database**: PostgreSQL
-- **Authentication**: Firebase Admin SDK + JWT
-- **AI/ML**: Natural.js for NLP (TF-IDF)
+- **Framework**: Python FastAPI
+- **Database**: PostgreSQL (async with asyncpg)
+- **Authentication**: Firebase Admin SDK + JWT (python-jose)
+- **AI/ML**: scikit-learn for TF-IDF, numpy for matrix operations
 
 ### Frontend
 - **Framework**: React 18
@@ -44,7 +44,7 @@ A full-stack web application for discovering, reviewing, and getting personalize
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+
+- Python 3.10+
 - PostgreSQL 13+
 - Firebase Project
 
@@ -53,8 +53,12 @@ A full-stack web application for discovering, reviewing, and getting personalize
 ```bash
 cd backend
 
+# Create and activate virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
 # Install dependencies
-npm install
+pip install -r requirements.txt
 
 # Copy environment variables
 cp .env.example .env
@@ -64,7 +68,17 @@ cp .env.example .env
 psql -d your_database -f src/config/schema.sql
 
 # Start development server
-npm run dev
+uvicorn main:app --reload --port 3001
+
+# Or run directly
+python main.py
+```
+
+### Running Tests
+
+```bash
+cd backend
+pytest -v
 ```
 
 ### Frontend Setup
