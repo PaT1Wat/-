@@ -137,6 +137,11 @@ CREATE INDEX IF NOT EXISTS idx_books_type ON books(type);
 CREATE INDEX IF NOT EXISTS idx_books_status ON books(status);
 CREATE INDEX IF NOT EXISTS idx_books_rating ON books(average_rating DESC);
 
+CREATE INDEX IF NOT EXISTS idx_authors_name ON authors(name);
+CREATE INDEX IF NOT EXISTS idx_authors_name_th ON authors USING gin (name_th gin_trgm_ops);
+
+CREATE INDEX IF NOT EXISTS idx_publishers_name ON publishers(name);
+
 CREATE INDEX IF NOT EXISTS idx_reviews_book ON reviews(book_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_user ON reviews(user_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_rating ON reviews(rating);

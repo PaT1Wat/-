@@ -2,6 +2,15 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { admin } = require('../config/firebase');
 
+// Validate JWT_SECRET exists and has sufficient length
+const getJwtSecret = () => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret.length < 32) {
+    throw new Error('JWT_SECRET must be set and at least 32 characters long');
+  }
+  return secret;
+};
+
 // Register new user
 const register = async (req, res, next) => {
   try {
@@ -30,7 +39,7 @@ const register = async (req, res, next) => {
     // Generate JWT token
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
+      getJwtSecret(),
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
 
@@ -76,7 +85,7 @@ const loginWithFirebase = async (req, res, next) => {
     // Generate JWT token
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
+      getJwtSecret(),
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
 

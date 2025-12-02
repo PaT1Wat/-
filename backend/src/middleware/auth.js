@@ -2,6 +2,15 @@ const { admin } = require('../config/firebase');
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
+// Validate JWT_SECRET exists and has sufficient length
+const getJwtSecret = () => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret.length < 32) {
+    throw new Error('JWT_SECRET must be set and at least 32 characters long');
+  }
+  return secret;
+};
+
 // Verify Firebase token
 const verifyFirebaseToken = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -27,7 +36,7 @@ const verifyFirebaseToken = async (req, res, next) => {
   } catch (firebaseError) {
     // Try JWT token as fallback
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = jwt.verify(token, getJwtSecret());
       const user = await User.findById(decoded.userId);
       
       if (!user) {
@@ -60,7 +69,7 @@ const optionalAuth = async (req, res, next) => {
     req.firebaseUser = decodedToken;
   } catch (firebaseError) {
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = jwt.verify(token, getJwtSecret());
       const user = await User.findById(decoded.userId);
       req.user = user;
     } catch (jwtError) {
