@@ -1,14 +1,7 @@
 import type { Metadata } from "next";
-import { Sarabun } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import Header from "@/components/layout/Header";
-
-const sarabun = Sarabun({
-  subsets: ["latin", "thai"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-sarabun",
-});
 
 export const metadata: Metadata = {
   title: "MangaRec - Manga & Novel Recommendations",
@@ -23,7 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="th" suppressHydrationWarning>
-      <body className={`${sarabun.variable} font-sans antialiased bg-gray-50 min-h-screen`}>
+      <body className="font-sans antialiased bg-gray-50 min-h-screen">
         <Providers>
           <div className="min-h-screen flex flex-col">
             <Header />

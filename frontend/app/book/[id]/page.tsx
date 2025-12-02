@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, use } from 'react';
+import { useState, useEffect, use } from 'react';
 import Image from 'next/image';
 import { useI18n } from '@/contexts/I18nContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,39 +25,70 @@ export default function BookDetailPage({ params }: BookDetailPageProps) {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewData, setReviewData] = useState({ rating: 5, title: '', content: '', is_spoiler: false });
 
-  const checkFavoriteStatus = useCallback(async () => {
+  // Fetch favorite status when authenticated
+  useEffect(() => {
+    if (!id || !isAuthenticated) return;
+    
+    const checkStatus = async () => {
+      try {
+        const response = await favoritesAPI.check(id);
+        setFavoriteStatus(response.data);
+      } catch (error) {
+        console.error('Error checking favorite:', error);
+      }
+    };
+    
+    checkStatus();
+  }, [id, isAuthenticated]);
+
+  // Record view interaction when authenticated
+  useEffect(() => {
+    if (!id || !isAuthenticated) return;
+    
+    const recordView = async () => {
+      try {
+        await recommendationsAPI.recordInteraction(id, 'view', 1.0);
+      } catch (error) {
+        console.error('Error recording interaction:', error);
+      }
+    };
+    
+    recordView();
+  }, [id, isAuthenticated]);
+
+  // Fetch reviews
+  useEffect(() => {
+    if (!id) return;
+    
+    const loadReviews = async () => {
+      try {
+        const response = await reviewsAPI.getByBook(id, { limit: 5 });
+        setReviews(response.data.reviews);
+      } catch (error) {
+        console.error('Error fetching reviews:', error);
+      }
+    };
+    
+    loadReviews();
+  }, [id]);
+
+  const refreshFavoriteStatus = async () => {
     try {
       const response = await favoritesAPI.check(id);
       setFavoriteStatus(response.data);
-    } catch (err) {
-      console.error('Error checking favorite:', err);
+    } catch (error) {
+      console.error('Error checking favorite:', error);
     }
-  }, [id]);
+  };
 
-  const recordInteraction = useCallback(async () => {
-    try {
-      await recommendationsAPI.recordInteraction(id, 'view', 1.0);
-    } catch (err) {
-      console.error('Error recording interaction:', err);
-    }
-  }, [id]);
-
-  const fetchReviews = useCallback(async () => {
+  const refreshReviews = async () => {
     try {
       const response = await reviewsAPI.getByBook(id, { limit: 5 });
       setReviews(response.data.reviews);
-    } catch (err) {
-      console.error('Error fetching reviews:', err);
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
     }
-  }, [id]);
-
-  useEffect(() => {
-    if (id && isAuthenticated) {
-      checkFavoriteStatus();
-      recordInteraction();
-    }
-    fetchReviews();
-  }, [id, isAuthenticated, checkFavoriteStatus, recordInteraction, fetchReviews]);
+  };
 
   const handleFavoriteToggle = async (listName = 'favorites') => {
     if (!isAuthenticated) return;
@@ -68,9 +99,9 @@ export default function BookDetailPage({ params }: BookDetailPageProps) {
       } else {
         await favoritesAPI.add(id, listName);
       }
-      checkFavoriteStatus();
-    } catch (err) {
-      console.error('Error toggling favorite:', err);
+      refreshFavoriteStatus();
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
     }
   };
 
@@ -83,9 +114,9 @@ export default function BookDetailPage({ params }: BookDetailPageProps) {
       });
       setShowReviewForm(false);
       setReviewData({ rating: 5, title: '', content: '', is_spoiler: false });
-      fetchReviews();
-    } catch (err) {
-      console.error('Error submitting review:', err);
+      refreshReviews();
+    } catch (error) {
+      console.error('Error submitting review:', error);
     }
   };
 

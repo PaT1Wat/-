@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/contexts/I18nContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -28,7 +28,7 @@ export default function AdminPage() {
     { key: 'reviews', label: t('admin.reviews') }
   ];
 
-  const refreshData = async () => {
+  const refreshData = useCallback(async () => {
     setLoading(true);
     try {
       let response;
@@ -50,12 +50,12 @@ export default function AdminPage() {
           setData(response.data.reviews);
           break;
       }
-    } catch (err) {
-      console.error('Error fetching data:', err);
+    } catch (error) {
+      console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab]);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -63,7 +63,7 @@ export default function AdminPage() {
       return;
     }
     refreshData();
-  }, [activeTab, isAdmin, router]);
+  }, [activeTab, isAdmin, router, refreshData]);
 
   const handleAdd = () => {
     setEditingId(null);
@@ -73,7 +73,7 @@ export default function AdminPage() {
 
   const handleEdit = (item: DataItem) => {
     setEditingId(item.id);
-    setFormData(item);
+    setFormData({ ...item } as Record<string, unknown>);
     setShowForm(true);
   };
 
@@ -93,7 +93,7 @@ export default function AdminPage() {
           break;
       }
       refreshData();
-    } catch (err) {
+    } catch {
       alert('Error deleting item');
     }
   };
@@ -126,7 +126,7 @@ export default function AdminPage() {
       }
       setShowForm(false);
       refreshData();
-    } catch (err) {
+    } catch {
       alert('Error saving item');
     }
   };
@@ -135,7 +135,7 @@ export default function AdminPage() {
     try {
       await reviewsAPI.approve(id);
       refreshData();
-    } catch (err) {
+    } catch {
       alert('Error approving review');
     }
   };
@@ -144,7 +144,7 @@ export default function AdminPage() {
     try {
       await reviewsAPI.reject(id);
       refreshData();
-    } catch (err) {
+    } catch {
       alert('Error rejecting review');
     }
   };

@@ -35,9 +35,10 @@ A full-stack web application for discovering, reviewing, and getting personalize
 - **AI/ML**: scikit-learn for TF-IDF, numpy for matrix operations
 
 ### Frontend
-- **Framework**: React 18
-- **Routing**: React Router v6
-- **Internationalization**: i18next
+- **Framework**: Next.js 16 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Internationalization**: Custom i18n context (Thai/English)
 - **Authentication**: Firebase Auth
 - **HTTP Client**: Axios
 
@@ -45,6 +46,7 @@ A full-stack web application for discovering, reviewing, and getting personalize
 
 ### Prerequisites
 - Python 3.10+
+- Node.js 18+
 - PostgreSQL 13+
 - Firebase Project
 
@@ -68,13 +70,13 @@ cp .env.example .env
 psql -d your_database -f src/config/schema.sql
 
 # Start development server
-uvicorn main:app --reload --port 3001
+uvicorn main:app --reload --port 8000
 
 # Or run directly
 python main.py
 ```
 
-### Running Tests
+### Backend Tests
 
 ```bash
 cd backend
@@ -90,11 +92,45 @@ cd frontend
 npm install
 
 # Copy environment variables
-cp .env.example .env
-# Edit .env with your Firebase config
+cp .env.example .env.local
+# Edit .env.local with your Firebase config
 
 # Start development server
+npm run dev
+
+# Open http://localhost:3000
+```
+
+### Frontend Build
+
+```bash
+cd frontend
+npm run build
 npm start
+```
+
+## Project Structure
+
+```
+├── backend/
+│   ├── app/
+│   │   ├── config/        # Database & Firebase config
+│   │   ├── middleware/    # Auth & error handling
+│   │   ├── models/        # Database operations
+│   │   ├── routers/       # API endpoints
+│   │   ├── schemas/       # Pydantic models
+│   │   └── services/      # Recommendation engine
+│   ├── tests/             # pytest tests
+│   ├── main.py            # FastAPI app
+│   └── requirements.txt
+│
+└── frontend/
+    ├── app/               # Next.js App Router pages
+    ├── components/        # React components
+    ├── contexts/          # Auth & i18n contexts
+    ├── hooks/             # Custom hooks
+    ├── lib/               # Utilities & types
+    └── public/            # Static assets
 ```
 
 ## API Endpoints

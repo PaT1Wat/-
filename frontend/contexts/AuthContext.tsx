@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { onAuthStateChanged, signInWithPopup, signOut, User as FirebaseUser } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, signOut, User as FirebaseUser, Auth } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
 import { authAPI } from '@/lib/api';
 import type { User } from '@/lib/types';
@@ -38,40 +38,79 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check for stored user
-    const storedUser = localStorage.getItem('user');
-    const storedToken = localStorage.getItem('token');
+    let unsubscribe: (() => void) | undefined;
+    let isMounted = true;
     
-    if (storedUser && storedToken) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (e) {
-        console.error('Error parsing stored user:', e);
+    const initializeAuth = async () => {
+      // Only run in browser
+      if (typeof window === 'undefined') {
+        return;
       }
-    }
 
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
-      if (firebaseUser) {
+      // Check for stored user
+      const storedUser = localStorage.getItem('user');
+      const storedToken = localStorage.getItem('token');
+      
+      if (storedUser && storedToken) {
         try {
-          const token = await firebaseUser.getIdToken();
-          const response = await authAPI.loginWithFirebase(token);
-          const userData = response.data.user;
-          
-          localStorage.setItem('token', response.data.token);
-          localStorage.setItem('user', JSON.stringify(userData));
-          setUser(userData);
-        } catch (err) {
-          console.error('Auth error:', err);
-          setError(err instanceof Error ? err.message : 'Authentication error');
+          if (isMounted) {
+            setUser(JSON.parse(storedUser));
+          }
+        } catch (e) {
+          console.error('Error parsing stored user:', e);
         }
       }
-      setLoading(false);
-    });
 
-    return () => unsubscribe();
+      // Only set up Firebase auth listener if auth is initialized
+      if (!auth) {
+        if (isMounted) {
+          setLoading(false);
+        }
+        return;
+      }
+
+      // auth is now guaranteed to be Auth type after the null check above
+      const validAuth: Auth = auth;
+      unsubscribe = onAuthStateChanged(validAuth, async (firebaseUser: FirebaseUser | null) => {
+        if (firebaseUser) {
+          try {
+            const token = await firebaseUser.getIdToken();
+            const response = await authAPI.loginWithFirebase(token);
+            const userData = response.data.user;
+            
+            localStorage.setItem('token', response.data.token);
+            localStorage.setItem('user', JSON.stringify(userData));
+            if (isMounted) {
+              setUser(userData);
+            }
+          } catch (err) {
+            console.error('Auth error:', err);
+            if (isMounted) {
+              setError(err instanceof Error ? err.message : 'Authentication error');
+            }
+          }
+        }
+        if (isMounted) {
+          setLoading(false);
+        }
+      });
+    };
+
+    initializeAuth();
+
+    return () => {
+      isMounted = false;
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, []);
 
   const loginWithGoogle = async () => {
+    if (!auth || !googleProvider) {
+      setError('Firebase not initialized');
+      throw new Error('Firebase not initialized');
+    }
     try {
       setError(null);
       await signInWithPopup(auth, googleProvider);
@@ -82,6 +121,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const logout = async () => {
+    if (!auth) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setUser(null);
+      return;
+    }
     try {
       await signOut(auth);
       localStorage.removeItem('token');
@@ -95,7 +140,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const updateUser = (userData: User) => {
     setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('user', JSON.stringify(userData));
+    }
   };
 
   const value: AuthContextType = {
