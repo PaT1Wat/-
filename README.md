@@ -29,10 +29,10 @@
 ## เทคโนโลยีที่ใช้
 
 ### Backend
-- **Runtime**: Node.js กับ Express
-- **ฐานข้อมูล**: PostgreSQL
-- **การยืนยันตัวตน**: Firebase Admin SDK + JWT
-- **AI/ML**: Natural.js สำหรับ NLP (TF-IDF)
+- **Framework**: Python กับ FastAPI
+- **ฐานข้อมูล**: PostgreSQL กับ SQLAlchemy (async)
+- **การยืนยันตัวตน**: Firebase Admin SDK + JWT (python-jose)
+- **AI/ML**: scikit-learn สำหรับ TF-IDF, KNN, SVD
 
 ### Frontend
 - **Framework**: React 18
@@ -44,6 +44,7 @@
 ## เริ่มต้นใช้งาน
 
 ### สิ่งที่ต้องมี
+- Python 3.10+
 - Node.js 18+
 - PostgreSQL 13+
 - โปรเจกต์ Firebase
@@ -53,18 +54,23 @@
 ```bash
 cd backend
 
+# สร้าง virtual environment
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# หรือ venv\Scripts\activate  # Windows
+
 # ติดตั้ง dependencies
-npm install
+pip install -r requirements.txt
 
 # คัดลอกไฟล์ตัวแปรสภาพแวดล้อม
 cp .env.example .env
 # แก้ไข .env ตามการตั้งค่าของคุณ
 
 # ตั้งค่าฐานข้อมูล (รัน schema.sql ใน PostgreSQL)
-psql -d your_database -f src/config/schema.sql
+psql -d your_database -f schema.sql
 
 # เริ่มเซิร์ฟเวอร์สำหรับพัฒนา
-npm run dev
+uvicorn app.main:app --reload --port 3001
 ```
 
 ### การตั้งค่า Frontend
