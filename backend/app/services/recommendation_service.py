@@ -1,14 +1,19 @@
 from typing import List, Dict, Optional, Tuple
 from uuid import UUID
+import logging
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from scipy.sparse.linalg import svds
+from scipy.linalg import LinAlgError
 from sqlalchemy import select, func, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models import Book, User, Review, UserInteraction, Tag, BookTag
+
+
+logger = logging.getLogger(__name__)
 
 
 class RecommendationService:
@@ -49,7 +54,7 @@ class RecommendationService:
         if documents:
             self.book_vectors = self.tfidf_vectorizer.fit_transform(documents)
             self.initialized = True
-            print(f"TF-IDF initialized with {len(books)} books")
+            logger.info(f"TF-IDF initialized with {len(books)} books")
     
     async def get_content_based_recommendations(
         self, 
@@ -216,7 +221,8 @@ class RecommendationService:
             U, sigma, Vt = svds(matrix.astype(float), k=k)
             sigma_diag = np.diag(sigma)
             predicted_ratings = np.dot(np.dot(U, sigma_diag), Vt)
-        except Exception:
+        except (LinAlgError, ValueError) as e:
+            logger.warning(f"SVD decomposition failed: {e}")
             return []
         
         # Get predictions for target user

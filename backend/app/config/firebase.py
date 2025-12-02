@@ -1,10 +1,12 @@
 import firebase_admin
 from firebase_admin import credentials, auth
 from typing import Optional
+import logging
 
 from app.config.settings import settings
 
 
+logger = logging.getLogger(__name__)
 _firebase_app: Optional[firebase_admin.App] = None
 
 
@@ -24,11 +26,11 @@ def initialize_firebase() -> Optional[firebase_admin.App]:
                     "client_email": settings.firebase_client_email,
                 })
                 _firebase_app = firebase_admin.initialize_app(cred)
-                print("Firebase Admin SDK initialized")
+                logger.info("Firebase Admin SDK initialized")
             else:
-                print("Firebase credentials not configured, skipping initialization")
+                logger.info("Firebase credentials not configured, skipping initialization")
         except Exception as e:
-            print(f"Error initializing Firebase Admin SDK: {e}")
+            logger.error(f"Error initializing Firebase Admin SDK: {e}")
     else:
         _firebase_app = firebase_admin.get_app()
     

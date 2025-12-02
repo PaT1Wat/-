@@ -488,9 +488,10 @@ async def update_book(
     
     # Update tags if provided
     if book_data.tags is not None:
-        # Remove existing tags
+        # Remove existing tags using ORM approach
+        from sqlalchemy import delete as sql_delete
         await db.execute(
-            BookTag.__table__.delete().where(BookTag.book_id == book_id)
+            sql_delete(BookTag).where(BookTag.book_id == book_id)
         )
         
         # Add new tags

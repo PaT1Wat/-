@@ -119,7 +119,7 @@ class Book(Base):
     publisher: Mapped[Optional["Publisher"]] = relationship("Publisher", back_populates="books")
     reviews: Mapped[List["Review"]] = relationship("Review", back_populates="book", cascade="all, delete-orphan")
     favorites: Mapped[List["Favorite"]] = relationship("Favorite", back_populates="book", cascade="all, delete-orphan")
-    tags: Mapped[List["Tag"]] = relationship("Tag", secondary="book_tags", lazy="selectin")
+    tags: Mapped[List["Tag"]] = relationship("Tag", secondary="book_tags", lazy="joined")
     interactions: Mapped[List["UserInteraction"]] = relationship("UserInteraction", back_populates="book", cascade="all, delete-orphan")
     
     __table_args__ = (
