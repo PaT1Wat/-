@@ -1,70 +1,147 @@
-# Getting Started with Create React App
+# MangaRec Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A Next.js 16 frontend application for the MangaRec manga and novel recommendation system with Thai/English bilingual support.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- **Next.js 16 App Router**: Modern React Server Components architecture
+- **Bilingual Support**: Thai and English language switching (i18n)
+- **Firebase Authentication**: Google Sign-in integration
+- **Responsive Design**: Mobile-first with Tailwind CSS
+- **Type Safety**: Full TypeScript implementation
+- **SEO Optimized**: Static generation for public pages
 
-### `npm start`
+## Project Structure
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+```
+frontend/
+├── app/                    # Next.js App Router pages
+│   ├── admin/             # Admin dashboard
+│   ├── book/[id]/         # Book detail page (dynamic)
+│   ├── favorites/         # User favorites
+│   ├── login/             # Authentication
+│   ├── search/            # Search with filters
+│   ├── layout.tsx         # Root layout
+│   ├── page.tsx           # Home page
+│   └── providers.tsx      # Context providers
+├── components/            # Reusable components
+│   ├── books/             # Book-related components
+│   ├── common/            # Shared components
+│   └── layout/            # Layout components
+├── contexts/              # React Context providers
+│   ├── AuthContext.tsx    # Authentication state
+│   └── I18nContext.tsx    # Language/translation
+├── hooks/                 # Custom React hooks
+│   └── useBooks.ts        # Book data fetching
+├── lib/                   # Utilities and config
+│   ├── api.ts             # API client (axios)
+│   ├── firebase.ts        # Firebase config
+│   ├── i18n.ts            # Translations
+│   └── types.ts           # TypeScript types
+└── public/                # Static assets
+```
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Getting Started
 
-### `npm test`
+### Prerequisites
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- Node.js 18+
+- npm or yarn
+- Backend API running (Python FastAPI)
 
-### `npm run build`
+### Installation
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```bash
+# Install dependencies
+npm install
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+# Copy environment file
+cp .env.example .env.local
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Environment Variables
 
-### `npm run eject`
+Create a `.env.local` file with:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000/api
+NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Development
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+```bash
+# Run development server
+npm run dev
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+# Open http://localhost:3000
+```
 
-## Learn More
+### Building
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```bash
+# Create production build
+npm run build
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+# Run production server
+npm start
+```
 
-### Code Splitting
+### Linting
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```bash
+npm run lint
+```
 
-### Analyzing the Bundle Size
+## Pages
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+| Route | Description |
+|-------|-------------|
+| `/` | Home page with popular and recent books |
+| `/search` | Search with filters (type, status, tags, rating) |
+| `/book/[id]` | Book detail with reviews and recommendations |
+| `/login` | Google Sign-in |
+| `/favorites` | User's book lists (reading, completed, etc.) |
+| `/admin` | Admin dashboard (books, authors, publishers, reviews) |
 
-### Making a Progressive Web App
+## API Integration
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+The frontend communicates with the Python FastAPI backend at `NEXT_PUBLIC_API_URL`. All authenticated requests include a JWT token in the Authorization header.
 
-### Advanced Configuration
+## Internationalization
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+The app supports Thai (default) and English. Language preference is stored in localStorage and can be toggled from the header.
 
-### Deployment
+```typescript
+// Using translations
+import { useI18n } from '@/contexts/I18nContext';
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+const { t, language, toggleLanguage } = useI18n();
+<h1>{t('home.welcome')}</h1>
+```
 
-### `npm run build` fails to minify
+## Authentication
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Firebase Auth with Google provider. After Firebase authentication, the frontend exchanges the Firebase token for a JWT from the backend.
+
+```typescript
+import { useAuth } from '@/contexts/AuthContext';
+
+const { user, isAuthenticated, loginWithGoogle, logout } = useAuth();
+```
+
+## Deploy on Vercel
+
+The easiest way to deploy is using [Vercel](https://vercel.com):
+
+1. Push your code to GitHub
+2. Import the repository in Vercel
+3. Set environment variables
+4. Deploy
+
+For other platforms, see [Next.js deployment docs](https://nextjs.org/docs/app/building-your-application/deploying).
