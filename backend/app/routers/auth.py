@@ -146,7 +146,8 @@ async def login_with_supabase(
         user_metadata = decoded_token.get("user_metadata", {})
         
         user = User(
-            firebase_uid=user_id,  # Reusing firebase_uid field for Supabase user ID
+            # Note: firebase_uid field is reused to store Supabase user IDs for backward compatibility
+            firebase_uid=user_id,
             email=email,
             username=username,
             display_name=user_metadata.get("full_name") or user_metadata.get("name") or email.split("@")[0],
