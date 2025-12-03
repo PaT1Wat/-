@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
-import { auth, googleProvider } from '../services/firebase';
+import { supabase, signInWithGoogle as supabaseSignInWithGoogle, signOut as supabaseSignOut } from '../services/supabase';
 import { authAPI } from '../services/api';
 
 const AuthContext = createContext(null);
@@ -27,11 +26,11 @@ export const AuthProvider = ({ children }) => {
       setUser(JSON.parse(storedUser));
     }
 
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
+    // Listen for Supabase auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.access_token) {
         try {
-          const token = await firebaseUser.getIdToken();
-          const response = await authAPI.loginWithFirebase(token);
+          const response = await authAPI.loginWithSupabase(session.access_token);
           const userData = response.data.user;
           
           localStorage.setItem('token', response.data.token);
@@ -45,13 +44,20 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const loginWithGoogle = async () => {
     try {
       setError(null);
-      await signInWithPopup(auth, googleProvider);
+      await supabaseSignInWithGoogle();
     } catch (err) {
       setError(err.message);
       throw err;
@@ -60,7 +66,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await signOut(auth);
+      await supabaseSignOut();
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       setUser(null);

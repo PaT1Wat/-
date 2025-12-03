@@ -6,7 +6,13 @@ class Settings(BaseSettings):
     # Database
     database_url: str = "postgresql+asyncpg://user:password@localhost:5432/manga_recommendation"
     
-    # Firebase
+    # Supabase Configuration
+    supabase_url: Optional[str] = None
+    supabase_anon_key: Optional[str] = None
+    supabase_service_role_key: Optional[str] = None
+    supabase_jwt_secret: Optional[str] = None
+    
+    # Firebase (legacy - can be removed after migration)
     firebase_project_id: Optional[str] = None
     firebase_private_key: Optional[str] = None
     firebase_client_email: Optional[str] = None

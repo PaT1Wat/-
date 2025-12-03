@@ -1,6 +1,13 @@
 from app.config.settings import settings
 from app.config.database import Base, engine, async_session_maker, get_db
 from app.config.firebase import initialize_firebase, verify_firebase_token
+from app.config.supabase_auth import (
+    verify_supabase_token,
+    verify_supabase_token_with_api,
+    is_supabase_auth_configured,
+    get_user_id_from_token,
+    get_email_from_token,
+)
 
 __all__ = [
     "settings",
@@ -10,4 +17,9 @@ __all__ = [
     "get_db",
     "initialize_firebase",
     "verify_firebase_token",
+    "verify_supabase_token",
+    "verify_supabase_token_with_api",
+    "is_supabase_auth_configured",
+    "get_user_id_from_token",
+    "get_email_from_token",
 ]

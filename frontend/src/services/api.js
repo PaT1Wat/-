@@ -40,6 +40,7 @@ api.interceptors.response.use(
 export const authAPI = {
   register: (data) => api.post('/auth/register', data),
   loginWithFirebase: (firebaseToken) => api.post('/auth/login/firebase', { firebase_token: firebaseToken }),
+  loginWithSupabase: (accessToken) => api.post('/auth/login/supabase', { access_token: accessToken }),
   getProfile: () => api.get('/auth/profile'),
   updateProfile: (data) => api.put('/auth/profile', data)
 };
