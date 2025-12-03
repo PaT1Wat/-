@@ -7,13 +7,12 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.database import get_db
-from app.config.firebase import verify_firebase_token
 from app.config.supabase_auth import verify_supabase_token, get_user_id_from_token, get_email_from_token
 from app.middleware.auth import create_access_token, get_current_user, require_admin
 from app.models import User
 from app.schemas import (
     UserCreate, UserUpdate, UserRoleUpdate, UserResponse, 
-    UserListResponse, FirebaseLoginRequest, SupabaseLoginRequest, AuthResponse, MessageResponse
+    UserListResponse, SupabaseLoginRequest, AuthResponse, MessageResponse
 )
 
 
@@ -43,6 +42,8 @@ async def register(
         )
     
     # Create user
+    # Note: firebase_uid field is reused to store auth provider user IDs (Supabase)
+    # for backward compatibility. No database migration needed.
     user = User(
         firebase_uid=user_data.firebase_uid,
         email=user_data.email,
@@ -60,50 +61,6 @@ async def register(
     
     return AuthResponse(
         message="User registered successfully",
-        user=UserResponse.model_validate(user),
-        token=token
-    )
-
-
-@router.post("/login/firebase", response_model=AuthResponse)
-async def login_with_firebase(
-    login_data: FirebaseLoginRequest,
-    db: AsyncSession = Depends(get_db)
-):
-    """Login with Firebase token."""
-    # Verify Firebase token
-    decoded_token = verify_firebase_token(login_data.firebase_token)
-    if not decoded_token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid Firebase token"
-        )
-    
-    # Find or create user
-    result = await db.execute(select(User).where(User.firebase_uid == decoded_token["uid"]))
-    user = result.scalar_one_or_none()
-    
-    if not user:
-        # Create new user from Firebase data
-        email = decoded_token.get("email", "")
-        username = email.split("@")[0] + "_" + str(int(datetime.utcnow().timestamp()))
-        
-        user = User(
-            firebase_uid=decoded_token["uid"],
-            email=email,
-            username=username,
-            display_name=decoded_token.get("name") or email.split("@")[0],
-            avatar_url=decoded_token.get("picture")
-        )
-        db.add(user)
-        await db.commit()
-        await db.refresh(user)
-    
-    # Generate JWT token
-    token = create_access_token({"user_id": str(user.id), "email": user.email, "role": user.role})
-    
-    return AuthResponse(
-        message="Login successful",
         user=UserResponse.model_validate(user),
         token=token
     )

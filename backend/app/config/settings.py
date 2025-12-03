@@ -12,11 +12,6 @@ class Settings(BaseSettings):
     supabase_service_role_key: Optional[str] = None
     supabase_jwt_secret: Optional[str] = None
     
-    # Firebase (legacy - can be removed after migration)
-    firebase_project_id: Optional[str] = None
-    firebase_private_key: Optional[str] = None
-    firebase_client_email: Optional[str] = None
-    
     # JWT
     jwt_secret: str = "your-secret-key-at-least-32-characters-long"
     jwt_algorithm: str = "HS256"

@@ -94,7 +94,6 @@ npm start
 ### การยืนยันตัวตน
 - `POST /api/auth/register` - ลงทะเบียนผู้ใช้ใหม่
 - `POST /api/auth/login/supabase` - เข้าสู่ระบบด้วย Supabase Auth token
-- `POST /api/auth/login/firebase` - เข้าสู่ระบบด้วย Firebase token (legacy)
 - `GET /api/auth/profile` - ดูโปรไฟล์ผู้ใช้ปัจจุบัน
 - `PUT /api/auth/profile` - อัปเดตโปรไฟล์
 
@@ -283,7 +282,7 @@ const { data, error } = await supabase.from('books').select('*').limit(10);
 1. **ฐานข้อมูล**: schema PostgreSQL ที่มีอยู่ (`schema.sql`) เข้ากันได้กับ PostgreSQL ของ Supabase
 2. **API Routes**: มีการเพิ่ม TODO comments เพื่อระบุว่าจุดไหนสามารถเปลี่ยนจาก SQLAlchemy เป็น Supabase client ได้
 3. **Storage**: ใช้ `client.storage` สำหรับอัปโหลดไฟล์ (เช่น รูปปกหนังสือ)
-4. **Auth**: ใช้ Supabase Auth เป็นหลัก (รองรับ Firebase Auth เป็น legacy)
+4. **Auth**: ใช้ Supabase Auth เป็นผู้ให้บริการยืนยันตัวตนหลัก
 
 ดูโมดูลต่อไปนี้สำหรับตัวอย่างรูปแบบการใช้งาน:
 - `backend/app/config/supabase_client.py` - Supabase client สำหรับ database และ storage

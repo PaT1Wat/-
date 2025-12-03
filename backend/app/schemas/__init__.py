@@ -2,7 +2,7 @@ from app.schemas.schemas import (
     # User
     UserBase, UserCreate, UserUpdate, UserRoleUpdate, UserResponse, UserListResponse,
     # Auth
-    FirebaseLoginRequest, SupabaseLoginRequest, AuthResponse,
+    SupabaseLoginRequest, AuthResponse,
     # Author
     AuthorBase, AuthorCreate, AuthorUpdate, AuthorResponse, AuthorListResponse,
     # Publisher
@@ -30,7 +30,7 @@ __all__ = [
     # User
     "UserBase", "UserCreate", "UserUpdate", "UserRoleUpdate", "UserResponse", "UserListResponse",
     # Auth
-    "FirebaseLoginRequest", "SupabaseLoginRequest", "AuthResponse",
+    "SupabaseLoginRequest", "AuthResponse",
     # Author
     "AuthorBase", "AuthorCreate", "AuthorUpdate", "AuthorResponse", "AuthorListResponse",
     # Publisher
