@@ -221,16 +221,16 @@ REACT_APP_SUPABASE_ANON_KEY=your-anon-key-here
 
 ตัวอย่าง policies:
 ```sql
--- อนุญาตให้ผู้ใช้ที่ยืนยันตัวตนแล้วอ่านหนังสือทั้งหมด
-CREATE POLICY "Books are viewable by everyone" ON books
+-- อนุญาตให้ทุกคนดูหนังสือได้
+CREATE POLICY "ทุกคนสามารถดูหนังสือได้" ON books
   FOR SELECT USING (true);
 
 -- อนุญาตให้ผู้ใช้เพิ่มรีวิวของตัวเอง
-CREATE POLICY "Users can insert their own reviews" ON reviews
+CREATE POLICY "ผู้ใช้สามารถเพิ่มรีวิวของตัวเองได้" ON reviews
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- อนุญาตให้ผู้ใช้แก้ไขรีวิวของตัวเอง
-CREATE POLICY "Users can update their own reviews" ON reviews
+CREATE POLICY "ผู้ใช้สามารถแก้ไขรีวิวของตัวเองได้" ON reviews
   FOR UPDATE USING (auth.uid() = user_id);
 ```
 
