@@ -288,3 +288,32 @@ const { data, error } = await supabase.from('books').select('*').limit(10);
 - `backend/app/config/supabase_client.py` - Supabase client สำหรับ database และ storage
 - `backend/app/config/supabase_auth.py` - การยืนยันตัวตนด้วย Supabase Auth
 - `frontend/src/services/supabase.js` - Supabase client ฝั่ง frontend
+- `supabase/supabase_client.py` - ตัวอย่าง Python client wrapper พร้อมฟังก์ชัน CRUD
+- `supabase/supabase_client.js` - ตัวอย่าง JavaScript client wrapper
+
+### การรัน Database Migrations
+
+โปรเจกต์นี้มี workflow อัตโนมัติสำหรับรัน migrations เมื่อ push ไปยัง `main` branch:
+
+```bash
+# รัน migrations ด้วยตนเองในเครื่อง local
+export DATABASE_URL="postgresql://postgres:password@db.your-project.supabase.co:5432/postgres?sslmode=require"
+./run_migrations_local.sh
+
+# หรือรัน schema.sql โดยตรง
+./run_schema_supabase.sh backend/schema.sql
+```
+
+ดูเอกสารเพิ่มเติมที่:
+- `supabase/README.md` - คู่มือการตั้งค่า Supabase
+- `supabase/MIGRATION_CHECKLIST.md` - รายการตรวจสอบก่อนรัน migrations
+- `migrations/` - ไฟล์ migrations ที่พร้อมใช้งาน
+
+### การตั้งค่า GitHub Secrets สำหรับ CI/CD
+
+เพิ่ม secrets ต่อไปนี้ใน repository settings (Settings > Secrets and variables > Actions):
+
+| Secret | คำอธิบาย |
+|--------|----------|
+| `SUPABASE_DATABASE_URL` | PostgreSQL connection string พร้อม `sslmode=require` |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role key สำหรับการดำเนินการ admin |

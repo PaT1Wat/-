@@ -1,0 +1,140 @@
+# Deploy Migrations to Supabase
+#
+# This workflow automatically runs database migrations when changes
+# are pushed to the main branch.
+#
+# Required GitHub Secrets:
+#   SUPABASE_DATABASE_URL - PostgreSQL connection string with sslmode=require
+#     Format: postgresql://postgres:[PASSWORD]@db.[PROJECT].supabase.co:5432/postgres?sslmode=require
+#
+# Optional Secrets:
+#   SUPABASE_SERVICE_ROLE_KEY - For admin operations (if needed)
+
+name: Deploy Migrations
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'migrations/**'
+      - 'backend/schema.sql'
+
+  # Allow manual trigger
+  workflow_dispatch:
+
+# Minimal permissions required for this workflow
+permissions:
+  contents: read
+
+jobs:
+  deploy-migrations:
+    name: Run Database Migrations
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify DATABASE_URL secret exists
+        run: |
+          if [ -z "${{ secrets.SUPABASE_DATABASE_URL }}" ]; then
+            echo "::error::SUPABASE_DATABASE_URL secret is not set!"
+            echo ""
+            echo "Please add the following secret to your repository:"
+            echo "  Settings > Secrets and variables > Actions > New repository secret"
+            echo ""
+            echo "Secret name: SUPABASE_DATABASE_URL"
+            echo "Secret value: postgresql://postgres:[PASSWORD]@db.[PROJECT].supabase.co:5432/postgres?sslmode=require"
+            echo ""
+            echo "Find your connection string in Supabase Dashboard:"
+            echo "  Project Settings > Database > Connection string > URI"
+            exit 1
+          fi
+          echo "✓ SUPABASE_DATABASE_URL secret is configured"
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Verify database connection
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+        run: |
+          echo "Testing database connection..."
+          if psql "$DATABASE_URL" -c "SELECT 1" > /dev/null 2>&1; then
+            echo "✓ Database connection successful"
+          else
+            echo "::error::Failed to connect to database. Please verify your SUPABASE_DATABASE_URL secret."
+            exit 1
+          fi
+
+      - name: Run migrations
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+        run: |
+          echo "Looking for migration files..."
+          
+          # Ensure we're in the repository root
+          cd "$GITHUB_WORKSPACE"
+          
+          # Find all SQL files in migrations directory, sorted
+          if [ -d "migrations" ]; then
+            MIGRATION_FILES=$(find migrations -name "*.sql" -type f 2>/dev/null | sort)
+          else
+            MIGRATION_FILES=""
+          fi
+          
+          if [ -z "$MIGRATION_FILES" ]; then
+            echo "No migration files found in migrations/"
+            echo "Checking if backend/schema.sql was modified..."
+            
+            # If schema.sql exists and was modified, run it
+            if [ -f "backend/schema.sql" ]; then
+              echo "Running backend/schema.sql..."
+              psql "$DATABASE_URL" -f "backend/schema.sql"
+              echo "✓ Schema applied successfully"
+            else
+              echo "No migrations to run."
+            fi
+            exit 0
+          fi
+          
+          echo "Found migration files:"
+          for file in $MIGRATION_FILES; do
+            echo "  - $file"
+          done
+          echo ""
+          
+          # Run each migration in order
+          for file in $MIGRATION_FILES; do
+            echo ">>> Running: $file"
+            if psql "$DATABASE_URL" -f "$file"; then
+              echo "✓ Successfully ran: $file"
+            else
+              echo "::error::Failed to run migration: $file"
+              exit 1
+            fi
+            echo ""
+          done
+          
+          echo "========================================="
+          echo "All migrations completed successfully!"
+          echo "========================================="
+
+      - name: Migration Summary
+        if: always()
+        run: |
+          echo "## Migration Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ **Status:** Migrations completed successfully" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Status:** Migration failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Files Processed" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          find migrations -name "*.sql" -type f 2>/dev/null | sort || echo "No migration files found"
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
