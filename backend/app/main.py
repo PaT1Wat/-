@@ -5,7 +5,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config.settings import settings
-from app.config.firebase import initialize_firebase
 from app.config.supabase_auth import is_supabase_auth_configured
 from app.routers import (
     auth_router,
@@ -22,11 +21,10 @@ from app.schemas import HealthResponse
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    initialize_firebase()
     if is_supabase_auth_configured():
         print("Supabase Auth is configured and ready")
     else:
-        print("Supabase Auth is not configured (will use Firebase or JWT only)")
+        print("Supabase Auth is not configured (will use JWT only)")
     app.state.environment = settings.environment
     print(f"Server starting in {settings.environment} mode")
     yield
