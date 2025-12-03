@@ -15,6 +15,18 @@ from app.schemas import (
 )
 from app.services import recommendation_service
 
+# TODO: Supabase Migration
+# To migrate database operations to Supabase, import the Supabase client:
+# from app.config.supabase_client import get_supabase_client, get_supabase_admin_client
+#
+# Example Supabase query (replace SQLAlchemy queries):
+#   client = get_supabase_client()
+#   response = client.table("books").select("*, authors(*), tags(*)").execute()
+#   books = response.data
+#
+# Note: Use get_supabase_admin_client() only for server-side operations
+# that need to bypass Row Level Security (RLS).
+
 
 router = APIRouter(prefix="/books", tags=["Books"])
 
