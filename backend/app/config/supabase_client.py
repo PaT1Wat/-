@@ -104,8 +104,13 @@ def get_supabase_admin_client():
 # Example usage functions for common operations
 # TODO: These are placeholder examples - update table names and columns
 # to match your actual Supabase schema.
+#
+# Note: The supabase-py client uses synchronous HTTP calls under the hood.
+# These functions are kept synchronous for simplicity. For async FastAPI
+# endpoints, consider running these in a thread pool executor or using
+# the async httpx client directly.
 
-async def fetch_items_example(table_name: str = "items", limit: int = 10):
+def fetch_items_example(table_name: str = "items", limit: int = 10):
     """
     Example function demonstrating how to fetch rows from a Supabase table.
     
@@ -125,7 +130,7 @@ async def fetch_items_example(table_name: str = "items", limit: int = 10):
     return response.data
 
 
-async def insert_item_example(table_name: str, data: dict):
+def insert_item_example(table_name: str, data: dict):
     """
     Example function demonstrating how to insert a row into a Supabase table.
     
@@ -143,7 +148,7 @@ async def insert_item_example(table_name: str, data: dict):
     return response.data
 
 
-async def upload_file_example(bucket_name: str, file_path: str, file_data: bytes):
+def upload_file_example(bucket_name: str, file_path: str, file_data: bytes):
     """
     Example function demonstrating how to upload a file to Supabase Storage.
     

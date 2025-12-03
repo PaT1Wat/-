@@ -148,8 +148,7 @@ class TestSupabaseClientModule:
 class TestSupabaseExampleFunctions:
     """Tests for the example Supabase operation functions."""
     
-    @pytest.mark.asyncio
-    async def test_fetch_items_example(self):
+    def test_fetch_items_example(self):
         """Test the fetch_items_example function with mocked client."""
         import sys
         
@@ -190,7 +189,7 @@ class TestSupabaseExampleFunctions:
                 # Clear cache
                 get_supabase_client.cache_clear()
                 
-                result = await fetch_items_example("items", 10)
+                result = fetch_items_example("items", 10)
                 
                 assert result == [
                     {"id": 1, "name": "Item 1"},
@@ -198,8 +197,7 @@ class TestSupabaseExampleFunctions:
                 ]
                 mock_client.table.assert_called_with("items")
     
-    @pytest.mark.asyncio
-    async def test_insert_item_example(self):
+    def test_insert_item_example(self):
         """Test the insert_item_example function with mocked client."""
         import sys
         
@@ -237,7 +235,7 @@ class TestSupabaseExampleFunctions:
                 get_supabase_client.cache_clear()
                 
                 test_data = {"name": "New Item"}
-                result = await insert_item_example("items", test_data)
+                result = insert_item_example("items", test_data)
                 
                 assert result == [{"id": 1, "name": "New Item"}]
                 mock_table.insert.assert_called_with(test_data)
