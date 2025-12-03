@@ -48,6 +48,10 @@ class FirebaseLoginRequest(BaseModel):
     firebase_token: str
 
 
+class SupabaseLoginRequest(BaseModel):
+    access_token: str
+
+
 class AuthResponse(BaseModel):
     message: str
     user: UserResponse

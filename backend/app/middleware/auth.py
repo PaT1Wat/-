@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config.settings import settings
 from app.config.database import get_db
 from app.config.firebase import verify_firebase_token
+from app.config.supabase_auth import verify_supabase_token, get_user_id_from_token
 from app.models import User
 
 
@@ -33,7 +34,18 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 
 
 async def get_user_from_token(token: str, db: AsyncSession) -> Optional[User]:
-    # Try Firebase token first
+    # Try Supabase token first (preferred method)
+    supabase_user = verify_supabase_token(token)
+    if supabase_user:
+        user_id = get_user_id_from_token(supabase_user)
+        if user_id:
+            # Try to find user by supabase_uid (using firebase_uid field for compatibility)
+            result = await db.execute(
+                select(User).where(User.firebase_uid == user_id)
+            )
+            return result.scalar_one_or_none()
+    
+    # Try Firebase token (legacy support)
     firebase_user = verify_firebase_token(token)
     if firebase_user:
         result = await db.execute(
@@ -41,7 +53,7 @@ async def get_user_from_token(token: str, db: AsyncSession) -> Optional[User]:
         )
         return result.scalar_one_or_none()
     
-    # Try JWT token
+    # Try our own JWT token
     try:
         payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
         user_id = payload.get("user_id")

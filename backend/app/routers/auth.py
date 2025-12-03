@@ -8,11 +8,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.database import get_db
 from app.config.firebase import verify_firebase_token
+from app.config.supabase_auth import verify_supabase_token, get_user_id_from_token, get_email_from_token
 from app.middleware.auth import create_access_token, get_current_user, require_admin
 from app.models import User
 from app.schemas import (
     UserCreate, UserUpdate, UserRoleUpdate, UserResponse, 
-    UserListResponse, FirebaseLoginRequest, AuthResponse, MessageResponse
+    UserListResponse, FirebaseLoginRequest, SupabaseLoginRequest, AuthResponse, MessageResponse
 )
 
 
@@ -93,6 +94,63 @@ async def login_with_firebase(
             username=username,
             display_name=decoded_token.get("name") or email.split("@")[0],
             avatar_url=decoded_token.get("picture")
+        )
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+    
+    # Generate JWT token
+    token = create_access_token({"user_id": str(user.id), "email": user.email, "role": user.role})
+    
+    return AuthResponse(
+        message="Login successful",
+        user=UserResponse.model_validate(user),
+        token=token
+    )
+
+
+@router.post("/login/supabase", response_model=AuthResponse)
+async def login_with_supabase(
+    login_data: SupabaseLoginRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """Login with Supabase Auth token."""
+    # Verify Supabase token
+    decoded_token = verify_supabase_token(login_data.access_token)
+    if not decoded_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Supabase token"
+        )
+    
+    user_id = get_user_id_from_token(decoded_token)
+    email = get_email_from_token(decoded_token)
+    
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token: missing user ID"
+        )
+    
+    # Find or create user
+    result = await db.execute(select(User).where(User.firebase_uid == user_id))
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        # Create new user from Supabase data
+        if not email:
+            email = f"{user_id}@supabase.user"
+        username = email.split("@")[0] + "_" + str(int(datetime.utcnow().timestamp()))
+        
+        # Get user metadata from token if available
+        user_metadata = decoded_token.get("user_metadata", {})
+        
+        user = User(
+            firebase_uid=user_id,  # Reusing firebase_uid field for Supabase user ID
+            email=email,
+            username=username,
+            display_name=user_metadata.get("full_name") or user_metadata.get("name") or email.split("@")[0],
+            avatar_url=user_metadata.get("avatar_url") or user_metadata.get("picture")
         )
         db.add(user)
         await db.commit()
