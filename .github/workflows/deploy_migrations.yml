@@ -23,6 +23,10 @@ on:
   # Allow manual trigger
   workflow_dispatch:
 
+# Minimal permissions required for this workflow
+permissions:
+  contents: read
+
 jobs:
   deploy-migrations:
     name: Run Database Migrations
