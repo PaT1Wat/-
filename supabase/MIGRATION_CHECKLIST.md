@@ -170,13 +170,13 @@ SELECT * FROM pg_policies WHERE schemaname = 'public';
 
 ### Fix 1: Replace `uuid_generate_v4()` with `gen_random_uuid()`
 
-If `uuid-ossp` is not available, use the built-in PostgreSQL function:
+PostgreSQL 13+ includes `gen_random_uuid()` built-in, so the `uuid-ossp` extension is no longer required. This is the recommended approach for Supabase:
 
 ```sql
--- Before
+-- Before (requires uuid-ossp extension)
 id UUID PRIMARY KEY DEFAULT uuid_generate_v4()
 
--- After (PostgreSQL 13+)
+-- After (built-in, no extension required - RECOMMENDED)
 id UUID PRIMARY KEY DEFAULT gen_random_uuid()
 ```
 

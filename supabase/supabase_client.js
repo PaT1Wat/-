@@ -48,8 +48,8 @@ const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY ||
 
 // Validate configuration
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    console.warn(
-        '⚠️ Supabase configuration missing. Set SUPABASE_URL and SUPABASE_ANON_KEY ' +
+    throw new Error(
+        'Supabase configuration missing. Set SUPABASE_URL and SUPABASE_ANON_KEY ' +
         'in your environment variables.'
     );
 }

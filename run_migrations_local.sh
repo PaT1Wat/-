@@ -78,9 +78,9 @@ run_psql() {
         local filename=$(basename "$sql_file")
         local dirname=$(dirname "$sql_file")
         
+        # Note: DATABASE_URL already contains credentials, so no PGPASSWORD needed
         docker run --rm \
             -v "${dirname}:/migrations:ro" \
-            -e "PGPASSWORD=${PGPASSWORD:-}" \
             postgres:15-alpine \
             psql "$DATABASE_URL" -f "/migrations/${filename}"
         return $?

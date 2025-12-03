@@ -1,15 +1,15 @@
 -- Sample Migration: Create sample tables with Row Level Security (RLS)
 -- 
 -- This migration demonstrates Supabase-compatible table creation with:
--- - UUID primary keys using uuid_generate_v4()
+-- - UUID primary keys using gen_random_uuid() (built into PostgreSQL 13+)
 -- - Timestamps with timezone
 -- - Row Level Security (RLS) policies for authenticated users
 --
 -- NOTE: This is a sample migration. For your actual schema, see backend/schema.sql
 -- and adapt it following the patterns shown here.
 
--- Enable required extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Enable required extensions (pg_trgm for text search)
+-- Note: uuid-ossp is optional; gen_random_uuid() is built-in for PostgreSQL 13+
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 
 -- ============================================================================
@@ -19,7 +19,7 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 -- The 'id' column should match auth.uid() for RLS policies to work.
 
 CREATE TABLE IF NOT EXISTS sample_users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(255) UNIQUE NOT NULL,
     username VARCHAR(100) UNIQUE NOT NULL,
     display_name VARCHAR(255),
@@ -58,7 +58,7 @@ CREATE POLICY "sample_users_insert_authenticated"
 -- Demonstrates a table with foreign key to users and appropriate RLS.
 
 CREATE TABLE IF NOT EXISTS sample_items (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES sample_users(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     description TEXT,

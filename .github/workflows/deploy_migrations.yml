@@ -72,8 +72,15 @@ jobs:
         run: |
           echo "Looking for migration files..."
           
+          # Ensure we're in the repository root
+          cd "$GITHUB_WORKSPACE"
+          
           # Find all SQL files in migrations directory, sorted
-          MIGRATION_FILES=$(find migrations -name "*.sql" -type f 2>/dev/null | sort)
+          if [ -d "migrations" ]; then
+            MIGRATION_FILES=$(find migrations -name "*.sql" -type f 2>/dev/null | sort)
+          else
+            MIGRATION_FILES=""
+          fi
           
           if [ -z "$MIGRATION_FILES" ]; then
             echo "No migration files found in migrations/"
