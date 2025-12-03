@@ -160,93 +160,93 @@ ISC
 
 ---
 
-## Switching to Supabase
+## การเปลี่ยนไปใช้ Supabase
 
-This project now supports [Supabase](https://supabase.com/) as an alternative backend data/store integration. Supabase provides a hosted PostgreSQL database with additional features like real-time subscriptions, authentication, and storage.
+โปรเจกต์นี้รองรับ [Supabase](https://supabase.com/) เป็นทางเลือกสำหรับการเชื่อมต่อฐานข้อมูลและ Storage Supabase มีฐานข้อมูล PostgreSQL พร้อมฟีเจอร์เพิ่มเติม เช่น real-time subscriptions, การยืนยันตัวตน และ Storage
 
-### ⚠️ Important Security Notice
+### ⚠️ คำเตือนด้านความปลอดภัยที่สำคัญ
 
-**If you previously shared your Supabase anon key (e.g., pasted it in chat, code, or any public location), you MUST rotate it immediately:**
+**หากคุณเคยแชร์ anon key ของ Supabase (เช่น วางในแชท, โค้ด หรือที่สาธารณะใดๆ) คุณต้องหมุนเวียน key ทันที:**
 
-1. Go to your [Supabase Dashboard](https://app.supabase.com/)
-2. Navigate to **Project Settings > API**
-3. Click **Generate new anon key**
-4. Update your `.env` file with the new key
-5. For production, add the keys to **GitHub Secrets** instead of committing them
+1. ไปที่ [Supabase Dashboard](https://app.supabase.com/)
+2. ไปที่ **Project Settings > API**
+3. คลิก **Generate new anon key**
+4. อัปเดตไฟล์ `.env` ของคุณด้วย key ใหม่
+5. สำหรับ production ให้เพิ่ม keys ใน **GitHub Secrets** แทนการ commit
 
-**Never commit real API keys or secrets to version control!**
+**อย่า commit API keys หรือ secrets จริงลงใน version control!**
 
-### Environment Variables
+### ตัวแปรสภาพแวดล้อม
 
-Add the following to your `.env` file in the `backend/` directory:
+เพิ่มรายการต่อไปนี้ในไฟล์ `.env` ในโฟลเดอร์ `backend/`:
 
 ```bash
-# Supabase Configuration
+# การตั้งค่า Supabase
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_ANON_KEY=your-anon-key-here
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
 ```
 
-#### Key Types:
-- **`SUPABASE_ANON_KEY`**: Safe for client-side use, respects Row Level Security (RLS)
-- **`SUPABASE_SERVICE_ROLE_KEY`**: **Server-side ONLY!** Bypasses RLS. Never expose to client code.
+#### ประเภทของ Key:
+- **`SUPABASE_ANON_KEY`**: ปลอดภัยสำหรับใช้ฝั่ง client เคารพ Row Level Security (RLS)
+- **`SUPABASE_SERVICE_ROLE_KEY`**: **ฝั่ง server เท่านั้น!** ข้าม RLS อย่าเปิดเผยให้โค้ดฝั่ง client
 
-### Row Level Security (RLS) Recommendations
+### คำแนะนำสำหรับ Row Level Security (RLS)
 
-For production use, enable RLS on your Supabase tables:
+สำหรับใช้งานจริง ให้เปิดใช้งาน RLS บนตาราง Supabase ของคุณ:
 
-1. In Supabase Dashboard, go to **Authentication > Policies**
-2. Enable RLS for each table
-3. Create policies that define who can read/write data
+1. ใน Supabase Dashboard ไปที่ **Authentication > Policies**
+2. เปิดใช้งาน RLS สำหรับแต่ละตาราง
+3. สร้าง policies ที่กำหนดว่าใครสามารถอ่าน/เขียนข้อมูลได้
 
-Example policies:
+ตัวอย่าง policies:
 ```sql
--- Allow authenticated users to read all books
+-- อนุญาตให้ผู้ใช้ที่ยืนยันตัวตนแล้วอ่านหนังสือทั้งหมด
 CREATE POLICY "Books are viewable by everyone" ON books
   FOR SELECT USING (true);
 
--- Allow users to insert their own reviews
+-- อนุญาตให้ผู้ใช้เพิ่มรีวิวของตัวเอง
 CREATE POLICY "Users can insert their own reviews" ON reviews
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
--- Allow users to update their own reviews
+-- อนุญาตให้ผู้ใช้แก้ไขรีวิวของตัวเอง
 CREATE POLICY "Users can update their own reviews" ON reviews
   FOR UPDATE USING (auth.uid() = user_id);
 ```
 
-### Using the Supabase Client
+### การใช้งาน Supabase Client
 
-The Supabase client is available at `backend/app/config/supabase_client.py`:
+Supabase client อยู่ที่ `backend/app/config/supabase_client.py`:
 
 ```python
 from app.config.supabase_client import get_supabase_client, get_supabase_admin_client
 
-# For user-facing operations (respects RLS)
+# สำหรับการดำเนินการของผู้ใช้ (เคารพ RLS)
 client = get_supabase_client()
 response = client.table("books").select("*").limit(10).execute()
 
-# For admin operations (bypasses RLS - server-side only!)
+# สำหรับการดำเนินการของ admin (ข้าม RLS - ฝั่ง server เท่านั้น!)
 admin_client = get_supabase_admin_client()
 response = admin_client.table("users").select("*").execute()
 ```
 
-### GitHub Secrets Setup
+### การตั้งค่า GitHub Secrets
 
-For CI/CD and production deployments, add these secrets to your GitHub repository:
+สำหรับ CI/CD และการ deploy บน production ให้เพิ่ม secrets เหล่านี้ใน GitHub repository ของคุณ:
 
-1. Go to **Repository Settings > Secrets and variables > Actions**
-2. Add the following secrets:
+1. ไปที่ **Repository Settings > Secrets and variables > Actions**
+2. เพิ่ม secrets ต่อไปนี้:
    - `SUPABASE_URL`
    - `SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
 
-### Migration Notes
+### หมายเหตุการย้ายระบบ
 
-The current codebase uses SQLAlchemy async with a direct PostgreSQL connection. To fully migrate to Supabase:
+โค้ดปัจจุบันใช้ SQLAlchemy async กับการเชื่อมต่อ PostgreSQL โดยตรง สำหรับการย้ายไปใช้ Supabase อย่างเต็มรูปแบบ:
 
-1. **Database**: Your existing PostgreSQL schema (`schema.sql`) is compatible with Supabase's PostgreSQL
-2. **API Routes**: TODO comments have been added to indicate where Supabase client calls can replace SQLAlchemy queries
-3. **Storage**: Use `client.storage` for file uploads (e.g., book cover images)
-4. **Auth**: Consider using Supabase Auth alongside or instead of Firebase Auth
+1. **ฐานข้อมูล**: schema PostgreSQL ที่มีอยู่ (`schema.sql`) เข้ากันได้กับ PostgreSQL ของ Supabase
+2. **API Routes**: มีการเพิ่ม TODO comments เพื่อระบุว่าจุดไหนสามารถเปลี่ยนจาก SQLAlchemy เป็น Supabase client ได้
+3. **Storage**: ใช้ `client.storage` สำหรับอัปโหลดไฟล์ (เช่น รูปปกหนังสือ)
+4. **Auth**: พิจารณาใช้ Supabase Auth ควบคู่หรือแทน Firebase Auth
 
-See the `backend/app/config/supabase_client.py` module for example usage patterns.
+ดูโมดูล `backend/app/config/supabase_client.py` สำหรับตัวอย่างรูปแบบการใช้งาน
