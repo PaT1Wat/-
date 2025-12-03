@@ -30,7 +30,7 @@
 
 ### Backend
 - **Framework**: Python กับ FastAPI
-- **ฐานข้อมูล**: PostgreSQL กับ SQLAlchemy (async)
+- **ฐานข้อมูล**: PostgreSQL กับ SQLAlchemy (async) + Supabase (optional)
 - **การยืนยันตัวตน**: Firebase Admin SDK + JWT (python-jose)
 - **AI/ML**: scikit-learn สำหรับ TF-IDF, KNN, SVD
 
@@ -157,3 +157,96 @@ npm start
 ## สัญญาอนุญาต
 
 ISC
+
+---
+
+## การเปลี่ยนไปใช้ Supabase
+
+โปรเจกต์นี้รองรับ [Supabase](https://supabase.com/) เป็นทางเลือกสำหรับการเชื่อมต่อฐานข้อมูลและ Storage Supabase มีฐานข้อมูล PostgreSQL พร้อมฟีเจอร์เพิ่มเติม เช่น real-time subscriptions, การยืนยันตัวตน และ Storage
+
+### ⚠️ คำเตือนด้านความปลอดภัยที่สำคัญ
+
+**หากคุณเคยแชร์ anon key ของ Supabase (เช่น วางในแชท, โค้ด หรือที่สาธารณะใดๆ) คุณต้องหมุนเวียน key ทันที:**
+
+1. ไปที่ [Supabase Dashboard](https://app.supabase.com/)
+2. ไปที่ **Project Settings > API**
+3. คลิก **Generate new anon key**
+4. อัปเดตไฟล์ `.env` ของคุณด้วย key ใหม่
+5. สำหรับ production ให้เพิ่ม keys ใน **GitHub Secrets** แทนการ commit
+
+**อย่า commit API keys หรือ secrets จริงลงใน version control!**
+
+### ตัวแปรสภาพแวดล้อม
+
+เพิ่มรายการต่อไปนี้ในไฟล์ `.env` ในโฟลเดอร์ `backend/`:
+
+```bash
+# การตั้งค่า Supabase
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key-here
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+```
+
+#### ประเภทของ Key:
+- **`SUPABASE_ANON_KEY`**: ปลอดภัยสำหรับใช้ฝั่ง client เคารพ Row Level Security (RLS)
+- **`SUPABASE_SERVICE_ROLE_KEY`**: **ฝั่ง server เท่านั้น!** ข้าม RLS อย่าเปิดเผยให้โค้ดฝั่ง client
+
+### คำแนะนำสำหรับ Row Level Security (RLS)
+
+สำหรับใช้งานจริง ให้เปิดใช้งาน RLS บนตาราง Supabase ของคุณ:
+
+1. ใน Supabase Dashboard ไปที่ **Authentication > Policies**
+2. เปิดใช้งาน RLS สำหรับแต่ละตาราง
+3. สร้าง policies ที่กำหนดว่าใครสามารถอ่าน/เขียนข้อมูลได้
+
+ตัวอย่าง policies:
+```sql
+-- อนุญาตให้ผู้ใช้ที่ยืนยันตัวตนแล้วอ่านหนังสือทั้งหมด
+CREATE POLICY "Books are viewable by everyone" ON books
+  FOR SELECT USING (true);
+
+-- อนุญาตให้ผู้ใช้เพิ่มรีวิวของตัวเอง
+CREATE POLICY "Users can insert their own reviews" ON reviews
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- อนุญาตให้ผู้ใช้แก้ไขรีวิวของตัวเอง
+CREATE POLICY "Users can update their own reviews" ON reviews
+  FOR UPDATE USING (auth.uid() = user_id);
+```
+
+### การใช้งาน Supabase Client
+
+Supabase client อยู่ที่ `backend/app/config/supabase_client.py`:
+
+```python
+from app.config.supabase_client import get_supabase_client, get_supabase_admin_client
+
+# สำหรับการดำเนินการของผู้ใช้ (เคารพ RLS)
+client = get_supabase_client()
+response = client.table("books").select("*").limit(10).execute()
+
+# สำหรับการดำเนินการของ admin (ข้าม RLS - ฝั่ง server เท่านั้น!)
+admin_client = get_supabase_admin_client()
+response = admin_client.table("users").select("*").execute()
+```
+
+### การตั้งค่า GitHub Secrets
+
+สำหรับ CI/CD และการ deploy บน production ให้เพิ่ม secrets เหล่านี้ใน GitHub repository ของคุณ:
+
+1. ไปที่ **Repository Settings > Secrets and variables > Actions**
+2. เพิ่ม secrets ต่อไปนี้:
+   - `SUPABASE_URL`
+   - `SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+
+### หมายเหตุการย้ายระบบ
+
+โค้ดปัจจุบันใช้ SQLAlchemy async กับการเชื่อมต่อ PostgreSQL โดยตรง สำหรับการย้ายไปใช้ Supabase อย่างเต็มรูปแบบ:
+
+1. **ฐานข้อมูล**: schema PostgreSQL ที่มีอยู่ (`schema.sql`) เข้ากันได้กับ PostgreSQL ของ Supabase
+2. **API Routes**: มีการเพิ่ม TODO comments เพื่อระบุว่าจุดไหนสามารถเปลี่ยนจาก SQLAlchemy เป็น Supabase client ได้
+3. **Storage**: ใช้ `client.storage` สำหรับอัปโหลดไฟล์ (เช่น รูปปกหนังสือ)
+4. **Auth**: พิจารณาใช้ Supabase Auth ควบคู่หรือแทน Firebase Auth
+
+ดูโมดูล `backend/app/config/supabase_client.py` สำหรับตัวอย่างรูปแบบการใช้งาน
