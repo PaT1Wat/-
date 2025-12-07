@@ -46,8 +46,54 @@
 ### สิ่งที่ต้องมี
 - Python 3.10+
 - Node.js 18+
-- PostgreSQL 13+
-- โปรเจกต์ Supabase
+- PostgreSQL 13+ (ถ้าต้องการใช้ backend และฐานข้อมูล)
+- โปรเจกต์ Supabase (ถ้าต้องการใช้ Supabase Auth)
+
+### โหมด Client-Only (สำหรับการทดสอบ/สาธิต)
+
+คุณสามารถรันแอปพลิเคชันในโหมด client-only โดยไม่ต้องตั้งค่า backend หรือฐานข้อมูล สำหรับการทดสอบการล็อกอินด้วย Google:
+
+#### ขั้นตอนการตั้งค่า Google Sign-In (Client-Only)
+
+1. **สร้าง OAuth 2.0 Credentials ใน Google Cloud Console**
+   ```
+   - ไปที่ https://console.cloud.google.com/
+   - สร้างโปรเจกต์ใหม่หรือเลือกโปรเจกต์ที่มีอยู่
+   - ไปที่ APIs & Services > Credentials
+   - คลิก "Create Credentials" > "OAuth 2.0 Client ID"
+   - เลือก Application type: "Web application"
+   - ตั้งค่า Authorized JavaScript origins:
+     * http://localhost:3000 (สำหรับ development)
+     * https://yourdomain.com (สำหรับ production)
+   - คัดลอก Client ID
+   ```
+
+2. **ตั้งค่า Frontend**
+   ```bash
+   cd frontend
+   
+   # ติดตั้ง dependencies
+   npm install
+   
+   # สร้างไฟล์ .env
+   cp .env.example .env
+   
+   # แก้ไข .env และเพิ่ม Google Client ID:
+   # REACT_APP_GOOGLE_CLIENT_ID=your-actual-client-id-here
+   ```
+
+3. **รันแอปพลิเคชัน**
+   ```bash
+   npm start
+   ```
+
+4. **ทดสอบการล็อกอิน**
+   - เปิดเบราว์เซอร์ไปที่ http://localhost:3000
+   - คลิกปุ่ม "Sign in with Google"
+   - ล็อกอินด้วยบัญชี Google
+   - ข้อมูลผู้ใช้จะถูกเก็บใน localStorage (สำหรับการสาธิตเท่านั้น)
+
+**หมายเหตุ:** โหมด client-only เหมาะสำหรับการทดสอบและสาธิตเท่านั้น สำหรับ production ควรตรวจสอบ ID token ฝั่ง server และบันทึกข้อมูลผู้ใช้ในฐานข้อมูล
 
 ### การตั้งค่า Backend
 
@@ -304,6 +350,19 @@ export DATABASE_URL="postgresql://postgres:password@db.your-project.supabase.co:
 ./run_schema_supabase.sh backend/schema.sql
 ```
 
+**การทำงานของ GitHub Actions Workflow:**
+
+ไฟล์ `.github/workflows/deploy_migrations.yml` จะรัน migrations อัตโนมัติเมื่อมีการเปลี่ยนแปลงใน:
+- `migrations/**` - ไฟล์ SQL migrations
+- `backend/schema.sql` - Schema หลัก
+
+**การจัดการ SUPABASE_DATABASE_URL Secret:**
+
+- ✅ **ถ้ามี secret:** workflow จะรัน migrations ตามปกติ
+- ⚠️ **ถ้าไม่มี secret:** workflow จะข้ามขั้นตอน database และแสดงข้อความแจ้งเตือน (ไม่ fail)
+
+สิ่งนี้ช่วยให้คุณสามารถพัฒนาและทดสอบโค้ดโดยไม่ต้องตั้งค่าฐานข้อมูล Supabase ก่อน
+
 ดูเอกสารเพิ่มเติมที่:
 - `supabase/README.md` - คู่มือการตั้งค่า Supabase
 - `supabase/MIGRATION_CHECKLIST.md` - รายการตรวจสอบก่อนรัน migrations
@@ -313,7 +372,7 @@ export DATABASE_URL="postgresql://postgres:password@db.your-project.supabase.co:
 
 เพิ่ม secrets ต่อไปนี้ใน repository settings (Settings > Secrets and variables > Actions):
 
-| Secret | คำอธิบาย |
-|--------|----------|
-| `SUPABASE_DATABASE_URL` | PostgreSQL connection string พร้อม `sslmode=require` |
-| `SUPABASE_SERVICE_ROLE_KEY` | Service role key สำหรับการดำเนินการ admin |
+| Secret | คำอธิบาย | จำเป็น? |
+|--------|----------|---------|
+| `SUPABASE_DATABASE_URL` | PostgreSQL connection string พร้อม `sslmode=require` | ไม่บังคับ - ถ้าไม่มี workflow จะข้าม DB steps |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role key สำหรับการดำเนินการ admin | ไม่บังคับ |

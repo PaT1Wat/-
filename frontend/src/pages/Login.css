@@ -38,6 +38,16 @@
   margin: 0;
 }
 
+.auth-mode-notice {
+  background: #fff3cd;
+  color: #856404;
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  border: 1px solid #ffeaa7;
+}
+
 .error-message {
   background: #ffebee;
   color: #d32f2f;
@@ -49,6 +59,13 @@
 
 .login-options {
   margin-bottom: 2rem;
+}
+
+#google-signin-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 44px;
 }
 
 .google-btn {
