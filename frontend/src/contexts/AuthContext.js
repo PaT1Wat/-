@@ -1,6 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase, signInWithGoogle as supabaseSignInWithGoogle, signOut as supabaseSignOut } from '../services/supabase';
 import { authAPI } from '../services/api';
+import { 
+  isGoogleAuthConfigured, 
+  getStoredGoogleUser, 
+  storeGoogleUser,
+  signOutGoogle 
+} from '../services/googleAuth';
 
 const AuthContext = createContext(null);
 
@@ -16,9 +22,25 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [authMode, setAuthMode] = useState('supabase'); // 'supabase' or 'client-only'
 
   useEffect(() => {
-    // Check for stored user
+    // Determine auth mode based on configuration
+    const isClientOnlyMode = isGoogleAuthConfigured();
+    const mode = isClientOnlyMode ? 'client-only' : 'supabase';
+    setAuthMode(mode);
+
+    // Check for stored user (client-only mode)
+    if (mode === 'client-only') {
+      const googleUser = getStoredGoogleUser();
+      if (googleUser) {
+        setUser(googleUser);
+      }
+      setLoading(false);
+      return; // Skip Supabase initialization in client-only mode
+    }
+
+    // Supabase mode: Check for stored user
     const storedUser = localStorage.getItem('user');
     const storedToken = localStorage.getItem('token');
     
@@ -57,6 +79,7 @@ export const AuthProvider = ({ children }) => {
   const loginWithGoogle = async () => {
     try {
       setError(null);
+      // Use Supabase OAuth flow (will be handled in Login.js for client-only mode)
       await supabaseSignInWithGoogle();
     } catch (err) {
       setError(err.message);
@@ -64,12 +87,23 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const loginWithGoogleClientOnly = (userData, token) => {
+    // Client-only mode: Store user data directly
+    storeGoogleUser(userData, token);
+    setUser(userData);
+  };
+
   const logout = async () => {
     try {
-      await supabaseSignOut();
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      setUser(null);
+      if (authMode === 'client-only') {
+        signOutGoogle();
+        setUser(null);
+      } else {
+        await supabaseSignOut();
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setUser(null);
+      }
     } catch (err) {
       setError(err.message);
       throw err;
@@ -85,7 +119,9 @@ export const AuthProvider = ({ children }) => {
     user,
     loading,
     error,
+    authMode,
     loginWithGoogle,
+    loginWithGoogleClientOnly,
     logout,
     updateUser,
     isAuthenticated: !!user,
