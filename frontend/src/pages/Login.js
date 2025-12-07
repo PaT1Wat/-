@@ -26,7 +26,10 @@ const Login = () => {
         signInWithGoogle({
           clientId,
           onSuccess: (user, token) => {
-            console.log('Google Sign-In successful (client-only mode):', user);
+            // Only log in development mode
+            if (process.env.NODE_ENV === 'development') {
+              console.log('Google Sign-In successful (client-only mode)');
+            }
             loginWithGoogleClientOnly(user, token);
             navigate('/');
           },

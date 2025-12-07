@@ -134,9 +134,28 @@ export const signOutGoogle = () => {
 export const getStoredGoogleUser = () => {
   try {
     const userStr = localStorage.getItem('google_user');
-    return userStr ? JSON.parse(userStr) : null;
+    if (!userStr) return null;
+    
+    const user = JSON.parse(userStr);
+    
+    // Validate user object structure
+    if (!user || typeof user !== 'object') {
+      console.warn('Invalid user data in localStorage');
+      localStorage.removeItem('google_user');
+      return null;
+    }
+    
+    // Validate required fields
+    if (!user.id || !user.email) {
+      console.warn('User data missing required fields');
+      localStorage.removeItem('google_user');
+      return null;
+    }
+    
+    return user;
   } catch (error) {
     console.error('Error reading stored user:', error);
+    localStorage.removeItem('google_user');
     return null;
   }
 };
@@ -163,7 +182,13 @@ export const storeGoogleUser = (user, token) => {
  */
 const parseJwt = (token) => {
   try {
-    const base64Url = token.split('.')[1];
+    // Validate token format (must have 3 parts)
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      throw new Error('Invalid token format: expected 3 parts');
+    }
+
+    const base64Url = parts[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const jsonPayload = decodeURIComponent(
       atob(base64)
@@ -171,9 +196,17 @@ const parseJwt = (token) => {
         .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
         .join('')
     );
-    return JSON.parse(jsonPayload);
+    
+    const payload = JSON.parse(jsonPayload);
+    
+    // Validate required fields
+    if (!payload.sub || !payload.email) {
+      throw new Error('Invalid token payload: missing required fields');
+    }
+    
+    return payload;
   } catch (error) {
-    throw new Error('Invalid token format');
+    throw new Error(`Invalid token format: ${error.message}`);
   }
 };
 
