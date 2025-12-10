@@ -116,12 +116,10 @@ If you've accidentally exposed any keys:
 ```
 supabase/
 ├── README.md                    # This file
-├── MIGRATION_CHECKLIST.md       # Pre-migration checklist
-├── supabase_client.py           # Python client example
-└── supabase_client.js           # JavaScript client example
+└── MIGRATION_CHECKLIST.md       # Pre-migration checklist
 
-migrations/
-└── 0001_create_samples.sql      # Sample migration with RLS policies
+backend/
+└── schema.sql                   # Main database schema
 
 # Root scripts
 ├── run_migrations_local.sh      # Local migration runner
