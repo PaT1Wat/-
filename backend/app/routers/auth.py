@@ -42,10 +42,8 @@ async def register(
         )
     
     # Create user
-    # Note: firebase_uid field is reused to store auth provider user IDs (Supabase)
-    # for backward compatibility. No database migration needed.
     user = User(
-        firebase_uid=user_data.firebase_uid,
+        supabase_uid=user_data.supabase_uid,
         email=user_data.email,
         username=user_data.username,
         display_name=user_data.display_name or user_data.username,
@@ -90,7 +88,7 @@ async def login_with_supabase(
         )
     
     # Find or create user
-    result = await db.execute(select(User).where(User.firebase_uid == user_id))
+    result = await db.execute(select(User).where(User.supabase_uid == user_id))
     user = result.scalar_one_or_none()
     
     if not user:
@@ -103,8 +101,7 @@ async def login_with_supabase(
         user_metadata = decoded_token.get("user_metadata", {})
         
         user = User(
-            # Note: firebase_uid field is reused to store Supabase user IDs for backward compatibility
-            firebase_uid=user_id,
+            supabase_uid=user_id,
             email=email,
             username=username,
             display_name=user_metadata.get("full_name") or user_metadata.get("name") or email.split("@")[0],

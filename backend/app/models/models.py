@@ -15,7 +15,7 @@ class User(Base):
     __tablename__ = "users"
     
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    firebase_uid: Mapped[Optional[str]] = mapped_column(String(128), unique=True, nullable=True)
+    supabase_uid: Mapped[Optional[str]] = mapped_column(String(128), unique=True, nullable=True)
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     username: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     display_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)

@@ -5,7 +5,7 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    firebase_uid VARCHAR(128) UNIQUE,
+    supabase_uid VARCHAR(128) UNIQUE,
     email VARCHAR(255) UNIQUE NOT NULL,
     username VARCHAR(100) UNIQUE NOT NULL,
     display_name VARCHAR(255),

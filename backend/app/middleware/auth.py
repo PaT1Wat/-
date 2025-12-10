@@ -38,10 +38,8 @@ async def get_user_from_token(token: str, db: AsyncSession) -> Optional[User]:
     if supabase_user:
         user_id = get_user_id_from_token(supabase_user)
         if user_id:
-            # Note: firebase_uid field is reused to store Supabase user IDs
-            # for backward compatibility. No database migration needed.
             result = await db.execute(
-                select(User).where(User.firebase_uid == user_id)
+                select(User).where(User.supabase_uid == user_id)
             )
             return result.scalar_one_or_none()
     

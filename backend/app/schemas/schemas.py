@@ -14,7 +14,7 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    firebase_uid: Optional[str] = None
+    supabase_uid: Optional[str] = None
 
 
 class UserUpdate(BaseModel):
